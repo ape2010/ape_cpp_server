@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<parameters>
+    <netthread>5</netthread>
+    <server>
+        <addr>http://0.0.0.0:10011</addr>
+    </server>
+    <cohserver>http://0.0.0.0:20021</cohserver>
+    
+</parameters>

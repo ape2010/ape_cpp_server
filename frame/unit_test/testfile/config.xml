@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<parameters>
+    <CohPort>43210</CohPort>
+    <family>
+        <mother>
+            <name>mothername</name>
+            <age></age>
+        </mother>
+    </family>
+    <array>
+        <item>aaa</item>
+        <item>bbb</item>
+        <item>ccc</item>
+    </array>
+    <StackThread>3</StackThread>
+    <Sos>
+        <SosList>
+            <ServiceId>111,112,113</ServiceId>
+            <ServerAddr>10.241.37.35:7001</ServerAddr>
+            <ServerAddr>10.241.37.35:7002</ServerAddr>
+        </SosList>
+        <SosList>
+            <ServiceId>113</ServiceId>
+            <ServerAddr>10.241.37.35:7002</ServerAddr>
+        </SosList>
+    </Sos>
+</parameters>

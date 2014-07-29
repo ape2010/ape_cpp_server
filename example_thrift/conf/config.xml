@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<parameters>
+    <netthread>5</netthread>
+    <server>
+        <addr>thrift://0.0.0.0:10012</addr>
+    </server>
+</parameters>
