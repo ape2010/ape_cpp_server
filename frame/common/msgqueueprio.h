@@ -1,5 +1,5 @@
-#ifndef ZAMP_COMMON_MSG_QUEUE_PIRO_H_
-#define ZAMP_COMMON_MSG_QUEUE_PIRO_H_
+#ifndef APE_COMMON_MSG_QUEUE_PIRO_H_
+#define APE_COMMON_MSG_QUEUE_PIRO_H_
 
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>

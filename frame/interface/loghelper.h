@@ -1,5 +1,5 @@
-#ifndef _ZAMPLUS_MONITOR_LOG_HELPER_H_
-#define _ZAMPLUS_MONITOR_LOG_HELPER_H_
+#ifndef _APELUS_MONITOR_LOG_HELPER_H_
+#define _APELUS_MONITOR_LOG_HELPER_H_
 
 #include "LogManager.h"
 

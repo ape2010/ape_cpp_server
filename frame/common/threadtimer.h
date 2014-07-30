@@ -1,5 +1,5 @@
-#ifndef ZAMP_COMMON_THREAD_TIMER_H_
-#define ZAMP_COMMON_THREAD_TIMER_H_
+#ifndef APE_COMMON_THREAD_TIMER_H_
+#define APE_COMMON_THREAD_TIMER_H_
 
 #include "timermanager.h"
 #include <boost/bind.hpp>

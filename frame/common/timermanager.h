@@ -1,5 +1,5 @@
-#ifndef ZAMP_COMMON_TIMER_MANAGER_H_
-#define ZAMP_COMMON_TIMER_MANAGER_H_
+#ifndef APE_COMMON_TIMER_MANAGER_H_
+#define APE_COMMON_TIMER_MANAGER_H_
 #include <stdint.h>
 #include <list>
 namespace ape{
