@@ -40,6 +40,7 @@ class CSession {
     EStatus GetStatus(){return status_;}
     void SetStatus(EStatus s){status_ = s;}
  private:
+    void DealWaitingList();
     void DoSendTimeOut(void *para);
     void CleanRequestTimers();
     void DoConnect();
@@ -59,6 +60,7 @@ private:
     ape::common::CThreadTimer *timer_heartbeat_;
     
     std::multimap<unsigned int, boost::shared_ptr<ape::common::CThreadTimer> > request_history_;
+    std::deque<void *> waitinglist_;
     
 };
 //typedef boost::shared_ptr<CSession> Session_Ptr;

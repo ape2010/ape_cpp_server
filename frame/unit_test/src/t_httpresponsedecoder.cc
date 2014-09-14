@@ -4,7 +4,8 @@
 #include "loghelper.h"
 
 #ifdef Test_HttpResponseDecoder
-using namespace ape::common;
+using namespace ape::protocol;
+using namespace ape::message;
 
 TEST(CHttpParser, ResponseDecode1) {
     const char *packet = "HTTP/1.1 200 ok\r\n\

@@ -2,6 +2,7 @@
 #include "xmlconfigparser.h"
 #include "controller.h"
 #include "loghelper.h"
+#include "func.h"
 
 #ifdef Test_XmlConfigParser
 using namespace ape::common;
@@ -53,5 +54,21 @@ TEST(CXmlConfigParser, fail) {
     
     EXPECT_EQ(-1, parser2.ParseFile("testfile/nnn.xml"));
     BS_XLOG(XLOG_DEBUG, "parse failed, [%s]\n", parser2.GetErrorMessage().c_str());
+}
+
+
+void testparser(const char *file) {
+    CXmlConfigParser parser;
+    EXPECT_EQ(0, parser.ParseFile(file));
+}
+TEST(CXmlConfigParser, yali) {
+    ExecuteYali(boost::bind(testparser, "testfile/config.xml"), "testparser", 100);
+}
+
+TEST(CXmlConfigParser, test_fail) {
+    //EXPECT_EQ(0, 1);
+    char *p = new char[1024];
+   delete p;
+   delete p;
 }
 #endif

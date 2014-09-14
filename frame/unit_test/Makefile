@@ -11,7 +11,7 @@ XLOG=$(HOME)/local/xlog
 MONGOC=$(HOME)/local/mongo-c-driver
 JSON=$(HOME)/local/json
 
-DIR_LIST=../interface ../common ../business ../net ../mongo ../watchdog ./src 
+DIR_LIST=../interface ../common ../net ../protocol ../tinyxml2 ../session ./src 
 OutPut=build/test/
 NEW_CODE_PATH=./
 #SOURCE CODE
@@ -53,7 +53,7 @@ INC_DIR+=-I$(JSON)/include/json
 LIB_DIR=-L/usr/local/lib -L $(GTEST)/lib $(XLOG)/lib/libxlog.a -L$(JSON)/lib 
 LIB_DIR+=-L$(MONGOC)/lib $(MONGOC)/lib/libbson-1.0.a 
 
-LIBS=-lz -ljson -lmongoc-1.0 -lrt -lgtest -lboost_thread -lboost_system -lpthread -Wall -ldl -Wl,--export-dynamic
+LIBS=-lz -lrt -lgtest -lboost_thread -lboost_system -lpthread -Wall -ldl -Wl,--export-dynamic
 
 LDFLAGS=$(LIB_DIR) $(LIBS)
 CPPFLAGS=$(INC_DIR) $(DFLAGS)  -DTIXML_USE_STL 

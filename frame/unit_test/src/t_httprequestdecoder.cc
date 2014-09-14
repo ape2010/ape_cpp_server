@@ -4,6 +4,8 @@
 #include "loghelper.h"
 
 #ifdef Test_HttpRequestDecoder
+using namespace ape::protocol;
+using namespace ape::message;
 using namespace ape::common;
 
 TEST(CHttpParser, Decode1) {

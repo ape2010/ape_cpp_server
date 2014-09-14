@@ -132,7 +132,9 @@ const char *CHttpParser::Decode(const char *buf, int len, ape::message::SNetMess
     }
     begin += 3; //skip 1.*
     if (isresponse) {
-        begin += 1;
+        if (*(begin++) != ' ') {
+            return NULL;
+        }
         message->SetReply(atoi(begin));
         //BS_XLOG(XLOG_TRACE,"CHttpParser::%s, code[%d], begin[%s]\n", __FUNCTION__, message->code, begin);
         begin = end + 1; //skip space
