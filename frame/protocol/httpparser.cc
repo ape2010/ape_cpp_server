@@ -67,14 +67,14 @@ std::map<std::string, std::string> CHttpParser::sm_default_header_;
 std::map<std::string, std::string> CHttpParser::sm_default_request_header_;
 CHttpParser::CHttpParser() : contentlen_(0), ischunked_(false) {
     if (sm_default_header_.empty()) {
-        sm_default_header_["Server"] = "Zamp Server 1.0";
+        sm_default_header_["Server"] = "Ape Http Server 1.0";
         sm_default_header_["Cache-Control"] = "no-cache";
         sm_default_header_["Content-Type"] = "text/html; charset=utf-8";
     }
     if (sm_default_request_header_.empty()) {
         sm_default_request_header_["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
         sm_default_request_header_["Cache-Control"] = "no-cache";
-        sm_default_request_header_["User-Agent"] = "ZampHttpClient";
+        sm_default_request_header_["User-Agent"] = "ApeHttpClient";
         sm_default_request_header_["Accept-Language"] = "en-US,en;q=0.8,zh-CN;q=0.6,zh-TW;q=0.4";
     }
 }
@@ -326,6 +326,8 @@ int CHttpParser::EncodeRequest(const ape::message::SHttpMessage *msg, ape::commo
         out->append(szlen);
         out->append("\r\n\r\n");
         out->append(msg->body.c_str());
+    } else {
+        out->append("\r\n");
     }
     return 0;
 }

@@ -105,4 +105,5 @@ install:
 	cp ./tinyxml2/*.h $(INSTALLDIR)/include/ape/
 	cp ./net/netthreadholder.h $(INSTALLDIR)/include/ape/
 	cp ./net/netservice.h $(INSTALLDIR)/include/ape/
+	cp ./net/sessioncallback.h $(INSTALLDIR)/include/ape/
 	cp $(EXE1) $(INSTALLDIR)/lib

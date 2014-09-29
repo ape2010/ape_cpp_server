@@ -30,7 +30,7 @@ private:
     void DoTimer();
     void DoSelfCheck();
 
-private:
+protected:
     int threadid_;
     boost::asio::io_service ioservice_;
     boost::asio::io_service::work *work_;

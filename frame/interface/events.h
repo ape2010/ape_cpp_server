@@ -49,7 +49,8 @@ typedef struct stNetMessage : public SNetEvent {
     virtual unsigned int GetSequenceId() = 0;
     void SetReply(int n = 0){type = E_Response; code = n;}
     bool IsReply() {return type == E_Response;}
-    stNetMessage(EEventType i) : SNetEvent(i), type(E_Request), isheartbeat(false), code(0), ctx(NULL){}
+	virtual bool IsOk() {return code == 0;}
+    stNetMessage(EEventType i) : SNetEvent(i), type(E_Request), isheartbeat(false), code(-1), ctx(NULL){}
     virtual ~stNetMessage(){ }
 }SNetMessage;
 
@@ -89,6 +90,7 @@ typedef struct stHttpMessage : public SNetMessage {
     stHttpMessage() : SNetMessage(HTTP_MESSAGE_EVENT), keepalive(false), requestno(0), httpversion(HTTP_1_0) {}
     virtual ~stHttpMessage(){}
     virtual unsigned int GetSequenceId(){return 0;}
+	virtual bool IsOk() {return code == 200;}
     virtual std::string NoticeInfo();
     virtual void Dump();
     

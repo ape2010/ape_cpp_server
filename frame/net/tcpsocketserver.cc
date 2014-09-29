@@ -58,9 +58,9 @@ void CTcpSocketServer::HandleStop() {
 
 void CTcpSocketServer::StartAccept() {
     BS_XLOG(XLOG_DEBUG,"CTcpSocketServer::%s...\n",__FUNCTION__);
-    CNetService *netservice = holder_->GetNetService();    
+    CSessionCallBack *session_callback = holder_->GetSessionCallBack();    
     CSession *session = ape::protocol::CreateSession(proto_);
-    session->Init(*(netservice->GetIoService()), proto_, netservice, NULL);
+    session->Init(*(session_callback->GetIoService()), proto_, session_callback, NULL);
     acceptor_.async_accept(session->GetConnectPrt()->Socket(),
         MakeAllocHandler(alloc_, boost::bind(&CTcpSocketServer::HandleAccept, this, session,
           boost::asio::placeholders::error)));
@@ -70,7 +70,7 @@ void CTcpSocketServer::HandleAccept(CSession *session, const boost::system::erro
     BS_XLOG(XLOG_DEBUG,"CTcpSocketServer::%s\n",__FUNCTION__);
     if (!err) {
         Connection_ptr conn = session->GetConnectPrt();
-        conn->Socket().get_io_service().post(boost::bind(&CSession::OnConnected, session));
+        conn->Socket().get_io_service().post(boost::bind(&CSession::OnAccept, session));
         conn->AsyncRead();    
         StartAccept();
     } else if(running_) {

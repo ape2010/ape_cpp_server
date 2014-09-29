@@ -52,7 +52,7 @@ void CNetThreadHolder::Stop() {
 boost::asio::io_service *CNetThreadHolder::GetAcceptIoService() {
     return ppthreads_[threadnum_-1]->GetIoService();
 }
-CNetService *CNetThreadHolder::GetNetService() {
+CSessionCallBack *CNetThreadHolder::GetSessionCallBack() {
     if (threadnum_ <= 1) {
         return ppthreads_[0];
     }

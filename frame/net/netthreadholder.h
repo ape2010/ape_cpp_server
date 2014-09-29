@@ -1,6 +1,7 @@
 #ifndef _APE_NET_NET_THREAD_HOLDER_H_
 #define _APE_NET_NET_THREAD_HOLDER_H_
 #include "netservice.h"
+#include "sessioncallback.h"
 #include <boost/thread/mutex.hpp>
 #include <vector>
 #include <string>
@@ -16,7 +17,7 @@ public:
     int StartServer(const std::vector<std::string> &addrs);
     void Stop();
 
-    virtual CNetService *GetNetService();
+    virtual CSessionCallBack *GetSessionCallBack();
     boost::asio::io_service *GetAcceptIoService();
     void GetThreadStatus(int &threadnum, int &deadthreadnum);
     void Dump();

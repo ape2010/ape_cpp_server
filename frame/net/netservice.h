@@ -7,21 +7,13 @@ namespace net {
 class CNetService {
  public:
     virtual boost::asio::io_service *GetIoService() = 0;
+    virtual ape::common::CTimerManager *GetTimerManager() = 0;
     virtual int  OnConnect(const std::string &name, const std::string &addr, bool autoreconnect = false, int heartbeat = 0) = 0;
     virtual int  DoConnect(const std::string &name, const std::string &addr, bool autoreconnect = false, int heartbeat = 0) = 0;
-    virtual void OnAccept(void *session) = 0;
-    virtual void OnConnected(void *session) = 0;
-    virtual void OnPeerClose(void *session) = 0;
-    virtual void OnRead(void *session, void *para) = 0;
     virtual void OnSendTo(const std::string &name, void *para, int timeout = 30) = 0;
     virtual void DoSendTo(const std::string &name, void *para, int timeout = 30) = 0;
     virtual void OnSendBack(unsigned int connid, void *para) = 0;
     virtual void DoSendBack(unsigned int connid, void *para) = 0;
-};
-class CNetServiceHolder {
- public:
-    virtual CNetService *GetNetService() = 0;
-    virtual ~CNetServiceHolder() {}
 };
 class CHandle {
  public:

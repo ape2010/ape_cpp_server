@@ -107,6 +107,7 @@ void CConnection::AsyncReadInner() {
 void CConnection::HandleRead(const boost::system::error_code& err, std::size_t size) {
     BS_XLOG(XLOG_DEBUG,"CConnection::%s,connection[%0x], id[%u], size[%d], buffer_.len[%d]\n",__FUNCTION__, this, id_, size, buffer_.len());
     if (err) {
+        buffer_.reset_loc(0);
         BS_XLOG(XLOG_DEBUG, "CConnection::%s, id[%u], code[%d], message[%s]\n", __FUNCTION__, id_, err.value(), err.message().c_str());
         OnPeerClose();
         return;
@@ -133,7 +134,7 @@ void CConnection::HandleRead(const boost::system::error_code& err, std::size_t s
             OnPeerClose();
             return;
         } else if (p == last) { //no incomplete packet
-            BS_XLOG(XLOG_TRACE,"CConnection::%s, id[%u], incomplete packet, waiting for read\n%s\n", __FUNCTION__, id_, p);
+            BS_XLOG(XLOG_TRACE,"CConnection::%s, id[%u], incomplete packet, waiting for read\n", __FUNCTION__, id_);
             delete msg;
             break;
         } else { // (p <= buffer_.top()) {
@@ -162,6 +163,10 @@ void CConnection::AsyncWrite(ape::message::SNetMessage *msg, bool close) {
 
     ape::common::CBuffer b;
     parser_->Encode(msg, &b);
+    /*
+    std::string str = ape::message::GetBinaryDumpInfo(b.base(), b.len());
+    BS_XLOG(XLOG_DEBUG,"CConnection::%s,connection[%0x], id[%u], buf:\n%s\n",__FUNCTION__, this, id_, str.c_str());
+    */
     close_after_write_ = close;
     SLenMsg lenmsg;
     lenmsg.len = (int)(b.len());
