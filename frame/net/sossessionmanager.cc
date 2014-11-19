@@ -61,7 +61,7 @@ class CSosSessionManager::CShortSessionContainer : public CSosSessionManager::CS
         }
     }
     virtual void Dump() {
-        BS_XLOG(XLOG_TRACE,"  CShortSessionContainer::%s, sessions_.size[%u]\n",__FUNCTION__, 
+        BS_XLOG(XLOG_TRACE,"  CShortSessionContainer::%s, sessions_.size[%u]\n",__FUNCTION__,
             sessions_.size());
     }
     virtual ~CShortSessionContainer() {
@@ -147,12 +147,12 @@ class CSosSessionManager::CPersistentSessionContainer : public CSosSessionManage
             if(status == CSession::CONNECTED){
                 p->SetStatus(CSession::TIME_OUT);
             } else if(status == CSession::TIME_OUT || status == CSession::CLOSED) {
-                p->Close();  // will flush history request and notify OnEvent 
+                p->Close();  // will flush history request and notify OnEvent
                 addr_sessions_.erase(tmp);
                 delete p;
             }
         }
-        
+
         boost::unordered_map<std::string, SSessionGroup>::iterator itr = session_groups_.begin();
         for(; itr != session_groups_.end(); ++itr) {
             SSessionGroup &group = itr->second;
@@ -170,7 +170,7 @@ class CSosSessionManager::CPersistentSessionContainer : public CSosSessionManage
         */
     }
     virtual void Dump() {
-        BS_XLOG(XLOG_TRACE,"  CPersistentSessionContainer::%s, addr_sessions_.size[%u], session_groups_.size[%u]\n",__FUNCTION__, 
+        BS_XLOG(XLOG_TRACE,"  CPersistentSessionContainer::%s, addr_sessions_.size[%u], session_groups_.size[%u]\n",__FUNCTION__,
             addr_sessions_.size(), session_groups_.size());
     }
     virtual ~CPersistentSessionContainer() {
@@ -203,7 +203,7 @@ int  CSosSessionManager::OnConnect(const std::string &name, const std::string &a
     return 0;
 }
 int  CSosSessionManager::DoConnect(const std::string &name, const std::string &addr, bool autoreconnect, int heartbeat) {
-    BS_XLOG(XLOG_DEBUG,"CSosSessionManager::%s, name[%s], addr[%s], autoreconnect[%d], heartbeat[%d]\n",__FUNCTION__, 
+    BS_XLOG(XLOG_DEBUG,"CSosSessionManager::%s, name[%s], addr[%s], autoreconnect[%d], heartbeat[%d]\n",__FUNCTION__,
         name.c_str(), addr.c_str(), autoreconnect, heartbeat);
     if (name.empty()) {
         BS_XLOG(XLOG_ERROR,"CSosSessionManager::%s, name is empty, addr[%s]\n",__FUNCTION__, addr.c_str());
@@ -216,16 +216,16 @@ int  CSosSessionManager::DoConnect(const std::string &name, const std::string &a
 
     char ip[32] = {0};
     unsigned int port;
-    ape::protocol::EProtocol pro;
-    if (0 != ape::protocol::ParseAddr(addr, &pro, ip, &port)) {
+    ape::protocol::EProtocolType pro;
+    if (0 != ape::protocol::ParseAddr(addr.c_str(), &pro, ip, &port)) {
         BS_XLOG(XLOG_ERROR,"CSosSessionManager::%s, bad addr[%s]...\n",__FUNCTION__, addr.c_str());
         return -1;
     }
-    CSession *session = ape::protocol::CreateSession(pro);
+    CSession *session = ape::net::SessionFactory::CreateSession(pro);
     session->Init(*io_service_, pro, this, GetTimerManager(), autoreconnect, heartbeat);
     session->SetAddr(addr);
     session->Connect(ip, port);
-    
+
     session_container->AddSession(name, addr, session);
     return 0;
 }
@@ -244,7 +244,7 @@ void CSosSessionManager::DoSendTo(const std::string &name, void *para, int timeo
         OnRead(NULL, msg);
         return;
     }
-    
+
     session->DoSendTo(para, timeout * 1000);
 }
 

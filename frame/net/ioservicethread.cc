@@ -21,10 +21,10 @@ CIoServiceThread::~CIoServiceThread() {
 void CIoServiceThread::InitInner() {
     tm_selfcheck_.Init(this, SELF_CHECK_INTERVAL, boost::bind(&CIoServiceThread::DoSelfCheck, this), ape::common::CThreadTimer::TIMER_CIRCLE);
 }
-void CIoServiceThread::Start() {    
+void CIoServiceThread::Start() {
     BS_XLOG(XLOG_DEBUG,"CIoServiceThread::%s, threadid_[%d]\n",__FUNCTION__, threadid_);
     work_ = new boost::asio::io_service::work(ioservice_);
-    thread_ = boost::thread(boost::bind(&boost::asio::io_service::run, &ioservice_)); 
+    thread_ = boost::thread(boost::bind(&boost::asio::io_service::run, &ioservice_));
     ioservice_.post(boost::bind(&CIoServiceThread::StartInThread, this));
 
     isalive_ = true;

@@ -3,13 +3,16 @@
 
 namespace ape {
 namespace protocol {
+typedef enum { E_TCP = 0, E_UDP, E_SOCKET } ESocketType;
+
 typedef enum {
-    PROTOCOL_ERROR = 0,
-    PROTOCOL_HTTP,
-    PROTOCOL_THRIFT,
-    PROTOCOL_RAPID,
-    PROTOCOL_WEAK
-}EProtocol;
+    E_PROTOCOL_ERROR = 0,
+    E_PROTOCOL_HTTP,
+    E_PROTOCOL_THRIFT,
+    E_PROTOCOL_FTD,
+    E_PROTOCOL_ALL
+}EProtocolType;
+
 }
 }
 

@@ -29,10 +29,15 @@ class CHttpParser : public CBaseParser{
 
 class HttpParserFactory: public ParserFactory {
  public:
+    HttpParserFactory() {
+        RegisterFactory(E_PROTOCOL_HTTP);
+    }
     virtual CBaseParser *CreateParser() {
         return new CHttpParser();
     }
     virtual ~HttpParserFactory() {}
+ private:
+    static HttpParserFactory http_parser_factory_;
 };
 }
 }

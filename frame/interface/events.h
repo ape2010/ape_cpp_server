@@ -14,7 +14,7 @@ namespace message {
 typedef enum {
     HTTP_MESSAGE_EVENT = 0,
     THRIFT_MESSAGE_EVENT,
-    
+
     EVENT_ALL
 }EEventType;
 
@@ -49,7 +49,7 @@ typedef struct stNetMessage : public SNetEvent {
     virtual unsigned int GetSequenceId() = 0;
     void SetReply(int n = 0){type = E_Response; code = n;}
     bool IsReply() {return type == E_Response;}
-	virtual bool IsOk() {return code == 0;}
+    virtual bool IsOk() {return code == 0;}
     stNetMessage(EEventType i) : SNetEvent(i), type(E_Request), isheartbeat(false), code(-1), ctx(NULL){}
     virtual ~stNetMessage(){ }
 }SNetMessage;
@@ -72,7 +72,7 @@ typedef struct stHttpMessage : public SNetMessage {
         std::string domain;
         time_t expires;
         stSCookie() :expires (0) {}
-        stSCookie(const std::string &v, const std::string &p, const std::string &d, time_t e = 0) : 
+        stSCookie(const std::string &v, const std::string &p, const std::string &d, time_t e = 0) :
             value(v), path(p), domain(d), expires(e) {}
     }SCookie;
     typedef enum { HTTP_1_0 = 0, HTTP_1_1 = 1} EHttpVersion;
@@ -86,14 +86,14 @@ typedef struct stHttpMessage : public SNetMessage {
     std::string body;
     boost::unordered_map<std::string, std::string> headers;
     boost::unordered_map<std::string, SCookie> cookies;
-    
+
     stHttpMessage() : SNetMessage(HTTP_MESSAGE_EVENT), keepalive(false), requestno(0), httpversion(HTTP_1_0) {}
     virtual ~stHttpMessage(){}
     virtual unsigned int GetSequenceId(){return 0;}
-	virtual bool IsOk() {return code == 200;}
+    virtual bool IsOk() {return code == 200;}
     virtual std::string NoticeInfo();
     virtual void Dump();
-    
+
     void AddHeader(const std::string &key, const std::string &value);
     void SetCookie(const std::string &key, const std::string &value, const std::string &path, const std::string &domain, time_t e = 0);
 }SHttpMessage;

@@ -11,9 +11,9 @@ static const char *ConnectStatus[] = {"WAITING", "CONNECTED", "TIME_OUT", "CONNE
 const int RECONNECT_INTERVAL = 3000; //3s
 CSession::CSession() : status_(WAITING), owner_(NULL), timer_owner_(NULL), port_(0), timer_reconn_(NULL), timer_heartbeat_(NULL)
 {}
-void CSession::Init(boost::asio::io_service &io, ape::protocol::EProtocol pro, CSessionCallBack *o, ape::common::CTimerManager *tm, bool autoreconnect, int heartbeat) {
+void CSession::Init(boost::asio::io_service &io, ape::protocol::EProtocolType pro, CSessionCallBack *o, ape::common::CTimerManager *tm, bool autoreconnect, int heartbeat) {
     proto_ = pro;
-    ptrconn_.reset(new CConnection(io, ape::protocol::GetParserFactory(pro), this));
+    ptrconn_.reset(new CConnection(io, pro, this));
     owner_ = o;
     timer_owner_ = tm;
     autoreconnect_ = autoreconnect;
@@ -45,7 +45,7 @@ void CSession::ConnectResult(int result) {
         if (heartbeatinterval_ > 0 ) {
             if (NULL == timer_heartbeat_) {
                 unsigned int interval = heartbeatinterval_ < 1000 ? 1000 : heartbeatinterval_;
-                timer_heartbeat_ = new ape::common::CThreadTimer(timer_owner_, interval, 
+                timer_heartbeat_ = new ape::common::CThreadTimer(timer_owner_, interval,
                     boost::bind(&CSession::DoHeartBeat, this), ape::common::CThreadTimer::TIMER_CIRCLE);
             }
             timer_heartbeat_->Start();
@@ -56,13 +56,13 @@ void CSession::ConnectResult(int result) {
     } else {
         if (autoreconnect_) {
             if (NULL == timer_reconn_) {
-                timer_reconn_ = new ape::common::CThreadTimer(timer_owner_, RECONNECT_INTERVAL, 
+                timer_reconn_ = new ape::common::CThreadTimer(timer_owner_, RECONNECT_INTERVAL,
                     boost::bind(&CSession::DoConnect, this), ape::common::CThreadTimer::TIMER_ONCE);
             }
             timer_reconn_->Start();
         }
     }
-    
+
     DealWaitingList();
 }
 void CSession::DoConnect() {
@@ -95,13 +95,13 @@ void CSession::OnConnected() {
     owner_->OnConnected(this);
 }
 void CSession::OnPeerClose() {
-    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], addr[%s:%u], autoreconn[%d]\n",__FUNCTION__, Id(), GetRemoteIp().c_str(), 
+    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], addr[%s:%u], autoreconn[%d]\n",__FUNCTION__, Id(), GetRemoteIp().c_str(),
         GetRemotePort(), autoreconnect_);
     status_ = CLOSED;
     CleanRequestAndCallBack();
     if (autoreconnect_) {
         if (NULL == timer_reconn_) {
-            timer_reconn_ = new ape::common::CThreadTimer(timer_owner_, RECONNECT_INTERVAL, 
+            timer_reconn_ = new ape::common::CThreadTimer(timer_owner_, RECONNECT_INTERVAL,
                 boost::bind(&CSession::DoConnect, this), ape::common::CThreadTimer::TIMER_ONCE);
         }
 		status_ = WAITING;
@@ -126,7 +126,7 @@ void CSession::OnRead(ape::message::SNetMessage *msg) {
 		if (msg->IsOk()) {status_ = CONNECTED;}
         unsigned int seqid = msg->GetSequenceId();
         BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], seqid[%d], request_history_.size[%u]\n", __FUNCTION__, Id(), seqid, request_history_.size());
-    
+
         std::multimap<unsigned int, boost::shared_ptr<ape::common::CThreadTimer> >::iterator itr = request_history_.find(seqid);
         if (itr != request_history_.end()) {
             msg->ctx = ((ape::message::SNetMessage*)(itr->second->GetData()))->ctx;
@@ -146,23 +146,23 @@ void CSession::OnRead(ape::message::SNetMessage *msg) {
 }
 void CSession::DoSendTo(void *para, int timeout) {
     ape::message::SNetMessage *msg = (ape::message::SNetMessage *)para;
-    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status[%s], addr[%s:%u], timeout[%d], msg:\n%s\n", __FUNCTION__, Id(), 
+    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status[%s], addr[%s:%u], timeout[%d], msg:\n%s\n", __FUNCTION__, Id(),
 		ConnectStatus[status_], ip_.c_str(), port_, timeout, msg->NoticeInfo().c_str());
-    
+
     if (status_ == CONNECTING || status_ == WAITING) {
         waitinglist_.push_back(SReadyPacket(para, timeout));
         return;
     }
-    
+
     if (status_ != CONNECTED) {
         msg->SetReply(ape::common::ERROR_PEER_CLOSE);
         owner_->OnRead(this, msg);
         return;
-    } 
+    }
     DoSend(msg, timeout);
 }
 void CSession::DoSend(ape::message::SNetMessage *msg, int timeout) {
-    boost::shared_ptr<ape::common::CThreadTimer> timer(new ape::common::CThreadTimer(timer_owner_, timeout, 
+    boost::shared_ptr<ape::common::CThreadTimer> timer(new ape::common::CThreadTimer(timer_owner_, timeout,
             boost::bind(&CSession::DoSendTimeOut, this, msg), ape::common::CThreadTimer::TIMER_ONCE, msg));
     timer->Start();
     request_history_.insert(std::make_pair(msg->GetSequenceId(), timer));
@@ -171,19 +171,19 @@ void CSession::DoSend(ape::message::SNetMessage *msg, int timeout) {
 }
 void CSession::DoSendBack(void *para, bool close) {
     ape::message::SNetMessage *msg = (ape::message::SNetMessage *)para;
-    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status_[%s], addr[%s:%u], close[%d] \n%s\n", __FUNCTION__, Id(), 
+    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status_[%s], addr[%s:%u], close[%d] \n%s\n", __FUNCTION__, Id(),
 		ConnectStatus[status_], GetRemoteIp().c_str(), GetRemotePort(), close, msg->NoticeInfo().c_str());
     ptrconn_->AsyncWrite(msg, close);
     delete msg;
 }
 void CSession::Close() {
-    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status_[%s], addr[%s:%u]\n", __FUNCTION__, Id(), 
+    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status_[%s], addr[%s:%u]\n", __FUNCTION__, Id(),
 		ConnectStatus[status_], GetRemoteIp().c_str(), GetRemotePort());
     status_ = CLOSED;
     ptrconn_->SetOwner(NULL);
     CleanRequestAndCallBack();
     owner_ = NULL;
-    
+
     ptrconn_->OnPeerClose();
 }
 
@@ -225,7 +225,7 @@ void CSession::DealWaitingList() {
         ape::message::SNetMessage *msg = (ape::message::SNetMessage *)(itr->packet);
         waitinglist_.pop_front();
         BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status[%s], send\n%s\n", __FUNCTION__, Id(), ConnectStatus[status_], msg->NoticeInfo().c_str());
-        
+
         if (status_ == CONNECTED) {
             DoSend(msg, itr->timeout);
         } else {
@@ -237,5 +237,22 @@ void CSession::DealWaitingList() {
 void CSession::Dump() {
     BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], request_history_.size[%u]\n", __FUNCTION__, Id(), request_history_.size());
 }
+
+/**************************************************************************************/
+/*********  SessionFactory ************************************************************/
+/**************************************************************************************/
+SessionFactory *SessionFactory::factories_[ape::protocol::E_PROTOCOL_ALL] = {NULL};
+CSession *SessionFactory::CreateSession(ape::protocol::EProtocolType protocol) {
+    if (protocol >= ape::protocol::E_PROTOCOL_ALL) {
+        BS_XLOG(XLOG_ERROR, "SessionFactory::%s, bad protocol[%d]\n", __FUNCTION__, protocol);
+        return NULL;
+    }
+
+    return  factories_[protocol] != NULL ? factories_[protocol]->CreateSession() : new CSession();
+}
+void SessionFactory::RegisterFactory(ape::protocol::EProtocolType protocol) {
+    factories_[protocol] = this;
+}
+
 }
 }

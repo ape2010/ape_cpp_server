@@ -20,17 +20,17 @@ class CSessionManager : public CIoServiceThread, public CSosSessionManager, publ
     virtual void StartInThread();
     virtual void StopInThread();
     virtual void Dump();
-    
+
     virtual boost::asio::io_service *GetIoService() {return CIoServiceThread::GetIoService();}
     virtual ape::common::CTimerManager *GetTimerManager() {return this;}
     virtual int GetThreadId() {return CIoServiceThread::GetThreadId();}
     virtual void OnRead(void *session, void *para);
     virtual int  OnPeerClose(void *session);
-    
+
  private:
     void InitInner();
     void DoCheckSession();
-    
+
  private:
     HandleFactory *factory;
     CHandle *handle_;

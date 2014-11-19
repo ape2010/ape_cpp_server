@@ -26,7 +26,7 @@ class CTcpSocketServer {
     boost::asio::ip::tcp::acceptor acceptor_;
     ape::common::CHandlerAllocator alloc_;
     CNetServiceHolder *holder_;
-    ape::protocol::EProtocol proto_;
+    ape::protocol::EProtocolType proto_;
     bool running_;
 };
 }

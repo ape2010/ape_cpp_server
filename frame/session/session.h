@@ -13,7 +13,7 @@ class CSession {
  public:
     typedef enum { WAITING = 0, CONNECTED, TIME_OUT, CONNECTING, CLOSED} EStatus;
     CSession();
-    virtual void Init(boost::asio::io_service &io, ape::protocol::EProtocol pro, CSessionCallBack *o, 
+    virtual void Init(boost::asio::io_service &io, ape::protocol::EProtocolType pro, CSessionCallBack *o,
         ape::common::CTimerManager *tm = NULL, bool autoreconnect = false, int heartbeat = 0);
     virtual void Connect(const std::string &ip, unsigned int port);
     virtual void ConnectResult(int result);
@@ -48,7 +48,7 @@ class CSession {
     void DoSend(ape::message::SNetMessage *msg, int timeout);
 private:
     EStatus status_;
-    ape::protocol::EProtocol proto_;
+    ape::protocol::EProtocolType proto_;
     Connection_ptr ptrconn_;
     CSessionCallBack *owner_;
     ape::common::CTimerManager *timer_owner_;
@@ -59,7 +59,7 @@ private:
     int heartbeatinterval_;
     ape::common::CThreadTimer *timer_reconn_;
     ape::common::CThreadTimer *timer_heartbeat_;
-    
+
     std::multimap<unsigned int, boost::shared_ptr<ape::common::CThreadTimer> > request_history_;
     typedef struct stReadyPacket {
         void *packet;
@@ -68,9 +68,22 @@ private:
         stReadyPacket(void *p, int t) : packet(p), timeout(t) {}
     }SReadyPacket;
     std::deque<SReadyPacket> waitinglist_;
-    
+
 };
 //typedef boost::shared_ptr<CSession> Session_Ptr;
+
+class SessionFactory {
+ public:
+    SessionFactory() {}
+    virtual ~SessionFactory() {}
+    virtual CSession *CreateSession() = 0;
+    void RegisterFactory(ape::protocol::EProtocolType protocol);
+
+    static CSession *CreateSession(ape::protocol::EProtocolType protocol);
+ private:
+    static SessionFactory *factories_[ape::protocol::E_PROTOCOL_ALL];
+};
+
 }
 }
 #endif

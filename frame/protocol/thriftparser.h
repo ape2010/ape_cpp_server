@@ -17,10 +17,15 @@ class CThriftParser : public CBaseParser{
 
 class ThriftParserFactory: public ParserFactory {
  public:
+    ThriftParserFactory() {
+        RegisterFactory(E_PROTOCOL_HTTP);
+    }
     virtual CBaseParser *CreateParser() {
         return new CThriftParser();
     }
     virtual ~ThriftParserFactory() {}
+ private:
+    static ThriftParserFactory thrift_parser_factory_;
 };
 }
 }

@@ -12,11 +12,11 @@ namespace net {
 unsigned int CConnection::sm_mark_ = 0;
 static const int MAX_PACKET_SIZE = 16 * 1024 * 1024;
 
-CConnection::CConnection(boost::asio::io_service &io_service, ape::protocol::ParserFactory *factory, CSession *o): 
-    io_service_(io_service), socket_(io_service), resolver_(io_service), conn_timer_(io_service), id_(++sm_mark_), 
+CConnection::CConnection(boost::asio::io_service &io_service, ape::protocol::EProtocolType pro, CSession *o):
+    io_service_(io_service), socket_(io_service), resolver_(io_service), conn_timer_(io_service), id_(++sm_mark_),
     remoteport_(0), connected_(true), close_after_write_(false), session_(o)
 {
-    parser_ = factory->CreateParser();
+    parser_ = ape::protocol::ParserFactory::CreateParser(pro);
 }
 CConnection::~CConnection() {
     if (parser_) {
@@ -33,7 +33,7 @@ void CConnection::AsyncConnect(const std::string &ip, unsigned int port, int tim
               boost::asio::placeholders::error, boost::asio::placeholders::iterator)));
 
     conn_timer_.expires_from_now(boost::posix_time::seconds(timeout));
-    conn_timer_.async_wait(ape::common::MakeAllocHandler(timer_alloc_, boost::bind(&CConnection::HandleConnectTimeout, 
+    conn_timer_.async_wait(ape::common::MakeAllocHandler(timer_alloc_, boost::bind(&CConnection::HandleConnectTimeout,
                     shared_from_this(), boost::asio::placeholders::error)));
 }
 void CConnection::HandleResolve(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
@@ -52,7 +52,7 @@ void CConnection::HandleConnected(const boost::system::error_code& err, boost::a
     if (!err) {
         ConnectFinish(0);
         return;
-    } 
+    }
     if (endpoint_iterator == boost::asio::ip::tcp::resolver::iterator()) {
         BS_XLOG(XLOG_WARNING,"CConnection::%s, this[%0X],  error:%s\n", __FUNCTION__, this, (err.message()).c_str());
         ConnectFinish(-3);
@@ -88,9 +88,9 @@ void CConnection::ConnectFinish(int result) {
 void CConnection::AsyncRead() {
     socket_.get_io_service().post(boost::bind(&CConnection::AsyncReadInner, shared_from_this()));
 }
-void CConnection::AsyncReadInner() {    
+void CConnection::AsyncReadInner() {
     BS_XLOG(XLOG_DEBUG,"CConnection::%s,connection[%0x], id[%u]\n",__FUNCTION__,this, id_);
-    
+
     if (remoteip_.empty() || 0 == remoteport_) {
         try {
             remoteip_ = socket_.remote_endpoint().address().to_string();
@@ -133,7 +133,7 @@ void CConnection::HandleRead(const boost::system::error_code& err, std::size_t s
             delete msg;
             OnPeerClose();
             return;
-        } else if (p == last) { //no incomplete packet
+        } else if (p == last) { //incomplete packet
             BS_XLOG(XLOG_TRACE,"CConnection::%s, id[%u], incomplete packet, waiting for read\n", __FUNCTION__, id_);
             delete msg;
             break;
@@ -142,7 +142,7 @@ void CConnection::HandleRead(const boost::system::error_code& err, std::size_t s
             session_->OnRead(msg);
         }
     }
-    
+
     /** p <= buffer_.top() */
     //BS_XLOG(XLOG_TRACE,"CConnection::%s::%d, m_pHead[0X%0X],buffer_.base[0X%0X],buffer_.len[%d]\n",__FUNCTION__,__LINE__,m_pHead,buffer_.base(),buffer_.len())
     if (p < buffer_.top()) {
@@ -153,10 +153,10 @@ void CConnection::HandleRead(const boost::system::error_code& err, std::size_t s
     if (buffer_.capacity() <= 1024) {
         //BS_XLOG(XLOG_TRACE,"CConnection::%s, increase 4096 bytes\n",__FUNCTION__);
         buffer_.add_capacity();
-    }    
+    }
     socket_.async_read_some(boost::asio::buffer(buffer_.top(), buffer_.capacity() - 1),
         ape::common::MakeAllocHandler(read_alloc_, boost::bind(&CConnection::HandleRead,
-            shared_from_this(), boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred)));  
+            shared_from_this(), boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred)));
 }
 void CConnection::AsyncWrite(ape::message::SNetMessage *msg, bool close) {
     BS_XLOG(XLOG_DEBUG,"CConnection::%s,connection[%0x], id[%u]\n",__FUNCTION__, this, id_);
@@ -172,7 +172,7 @@ void CConnection::AsyncWrite(ape::message::SNetMessage *msg, bool close) {
     lenmsg.len = (int)(b.len());
     lenmsg.buf = (void*)malloc(lenmsg.len);
     memcpy(lenmsg.buf, b.base(), lenmsg.len);
-    
+
     bool write_in_progress = !out_queue_.empty();
     out_queue_.push_back(lenmsg);
     if (!write_in_progress) {
@@ -192,7 +192,7 @@ void CConnection::HandleWrite(const boost::system::error_code& err) {
         OnPeerClose();
         return;
     }
-    
+
     free((void *)(out_queue_.front().buf));
     out_queue_.pop_front();
     if (!out_queue_.empty()) {
@@ -200,11 +200,11 @@ void CConnection::HandleWrite(const boost::system::error_code& err) {
             ape::common::MakeAllocHandler(write_alloc_, boost::bind(&CConnection::HandleWrite, shared_from_this(),
                 boost::asio::placeholders::error)));
     }
-    
+
     if (close_after_write_ && out_queue_.empty()) {
         OnPeerClose();
     }
-}    
+}
 void CConnection::OnPeerClose() {
     BS_XLOG(XLOG_DEBUG,"CConnection::%s,connection[%0x], id[%u], connected_[%d], addr[%s:%u]\n",
         __FUNCTION__, this, id_, connected_, remoteip_.c_str(), remoteport_);
@@ -227,7 +227,7 @@ const std::string &CConnection::GetRemoteIp() {
             BS_SLOG(XLOG_WARNING,"CConnection::"<<__FUNCTION__<<", error, code["<<ec.code()<<"], message["<<ec.what()<<"]\n");
         }
     }
-    
+
     return remoteip_;
 }
 unsigned int CConnection::GetRemotePort() {
@@ -239,9 +239,9 @@ unsigned int CConnection::GetRemotePort() {
             BS_SLOG(XLOG_WARNING,"CConnection::"<<__FUNCTION__<<", error, code["<<ec.code()<<"], message["<<ec.what()<<"]\n");
         }
     }
-    
+
     return remoteport_;
-}    
+}
 void CConnection::Dump() {
     BS_XLOG(XLOG_DEBUG,"  ==============CConnection::%s,id_[%u]]=========\n",__FUNCTION__,id_);
     BS_XLOG(XLOG_DEBUG,"           remoteip_[%s], remoteport_[%u]\n", remoteip_.c_str(),remoteport_);

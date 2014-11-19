@@ -6,6 +6,9 @@
 
 namespace ape{
 namespace protocol{
+
+HttpParserFactory HttpParserFactory::http_parser_factory_;
+
 static inline std::string trim(const char *buf, int len, bool tolowercase = false) {
     const char *begin = buf;
     const char *end = buf + len - 1;
@@ -56,7 +59,7 @@ static inline std::string GetStatus(int code) {
         case 501: return "501 Not Implemented";
         case 502: return "502 Bad Gateway";
         case 503: return "503 Service Unavailable";
-        default: { 
+        default: {
             char szcode[8] = {0};
             snprintf(szcode, 7, "%d Unknow Code", code);
             return std::string(szcode);
@@ -120,7 +123,7 @@ const char *CHttpParser::Decode(const char *buf, int len, ape::message::SNetMess
         message->url = std::string(begin, end - begin);
         begin = end + 1 + 5; //skip space http/
     }
-    
+
     if (0 == strncasecmp(begin, "1.1", 3)) {
         message->httpversion = ape::message::SHttpMessage::HTTP_1_1;
         message->keepalive = true;
@@ -138,19 +141,19 @@ const char *CHttpParser::Decode(const char *buf, int len, ape::message::SNetMess
         message->SetReply(atoi(begin));
         //BS_XLOG(XLOG_TRACE,"CHttpParser::%s, code[%d], begin[%s]\n", __FUNCTION__, message->code, begin);
         begin = end + 1; //skip space
-        
+
         begin = strstr(begin, "\r\n");
         if (begin == NULL || begin >= buf + len) {
             return NULL;
         }
     }
     begin += 2; //skip \r\n
-    
+
     const char *headend = strstr(begin,"\r\n\r\n");
-    if (headend == NULL || headend > buf + len) { 
+    if (headend == NULL || headend > buf + len) {
         return buf;  //incomplete packet
     }
-    
+
     end = strstr(begin, "\r\n");
     while (end != NULL && (begin < headend) && end <= headend) {
         const char *colon = strchr(begin, ':');
@@ -163,7 +166,7 @@ const char *CHttpParser::Decode(const char *buf, int len, ape::message::SNetMess
         begin = end + 2;
         end = strstr(begin, "\r\n");
     }
-    
+
     begin = headend + 4;
     if(ischunked_) {
         while(begin < buf + len) {
@@ -194,8 +197,8 @@ const char *CHttpParser::Decode(const char *buf, int len, ape::message::SNetMess
     return begin + contentlen_;
 }
 int CHttpParser::Encode(const ape::message::SNetMessage *msg, ape::common::CBuffer *out) {
-    return (msg->type == ape::message::SNetMessage::E_Request) ? 
-        EncodeRequest((ape::message::SHttpMessage *)msg, out) : 
+    return (msg->type == ape::message::SNetMessage::E_Request) ?
+        EncodeRequest((ape::message::SHttpMessage *)msg, out) :
         EncodeResponse((ape::message::SHttpMessage *)msg, out);
 }
 void CHttpParser::ParseHeader(const std::string &key, const std::string &value, ape::message::SHttpMessage *message) {
@@ -244,7 +247,7 @@ void CHttpParser::DecodeCookie(const char *buf, int len, ape::message::SHttpMess
                 strvalue.append(split1 + 1, split2 - split1 -1);
             }
             begin = split2 + 1;
-            for (; begin < end && *begin == ' '; ++begin){} 
+            for (; begin < end && *begin == ' '; ++begin){}
         }
     }
     if (!strkey.empty()) {
@@ -257,10 +260,10 @@ int CHttpParser::EncodeRequest(const ape::message::SHttpMessage *msg, ape::commo
     for (; itr != sm_default_request_header_.end(); ++itr) {
         default_header_list_.push_back(itr->first);
     }
-    
+
     out->append(msg->method.empty() ? "GET" : msg->method.c_str());
     out->append(" ");
-    
+
     const char *begin = msg->url.c_str();
     const char *host = NULL;
     int hostlen = 0;
@@ -292,7 +295,7 @@ int CHttpParser::EncodeRequest(const ape::message::SHttpMessage *msg, ape::commo
             default_header_list_.remove(itrh->first);
         }
     }
-    
+
     if (!msg->cookies.empty()) {
         out->append("Cookie: ");
     }
@@ -310,7 +313,7 @@ int CHttpParser::EncodeRequest(const ape::message::SHttpMessage *msg, ape::commo
     out->append("Connection: ");
     out->append(msg->keepalive ? "Keep-Alive" : "Close");
     out->append("\r\n");
-    
+
     std::list<std::string>::iterator itrl = default_header_list_.begin();
     for (; itrl != default_header_list_.end(); ++itrl) {
         out->append(itrl->c_str());
@@ -337,11 +340,11 @@ int CHttpParser::EncodeResponse(const ape::message::SHttpMessage *msg, ape::comm
     for (; itr != sm_default_header_.end(); ++itr) {
         default_header_list_.push_back(itr->first);
     }
-    
+
     out->append(msg->httpversion == ape::message::SHttpMessage::HTTP_1_1 ? "HTTP/1.1 " : "HTTP/1.0 ");
     out->append(GetStatus(msg->code).c_str());
     out->append("\r\n");
-    
+
     boost::unordered_map<std::string, std::string>::const_iterator itrh = msg->headers.begin();
     for (; itrh != msg->headers.end(); ++itrh) {
         out->append(itrh->first.c_str());
@@ -352,7 +355,7 @@ int CHttpParser::EncodeResponse(const ape::message::SHttpMessage *msg, ape::comm
             default_header_list_.remove(itrh->first);
         }
     }
-    
+
     boost::unordered_map<std::string, ape::message::SHttpMessage::SCookie>::const_iterator itrc = msg->cookies.begin();
     for (; itrc != msg->cookies.end(); ++itrc) {
         out->append("Set-Cookie: ");
@@ -371,7 +374,7 @@ int CHttpParser::EncodeResponse(const ape::message::SHttpMessage *msg, ape::comm
         }
         out->append("\r\n");
     }
-    
+
     std::list<std::string>::iterator itrl = default_header_list_.begin();
     for (; itrl != default_header_list_.end(); ++itrl) {
         out->append(itrl->c_str());
@@ -379,15 +382,15 @@ int CHttpParser::EncodeResponse(const ape::message::SHttpMessage *msg, ape::comm
         out->append(sm_default_header_[*itrl].c_str());
         out->append("\r\n");
     }
-    
+
     out->append("Date: ");
     out->append(httptime(time(NULL)).c_str());
     out->append("\r\n");
-    
+
     out->append("Connection: ");
     out->append(msg->keepalive ? "Keep-Alive" : "Close");
     out->append("\r\n");
-    
+
     if (msg->httpversion == ape::message::SHttpMessage::HTTP_1_1) {
         out->append("Transfer-Encoding: chunked\r\n");
         out->append("\r\n");
@@ -419,6 +422,8 @@ ape::message::SNetMessage *CHttpParser::CreateHeartBeatMessage(ape::message::SNe
     }
     return msg;
 }
+
+
 }
 }
 

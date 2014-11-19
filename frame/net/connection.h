@@ -23,14 +23,14 @@ public:
         int len;
         void *buf;
     }SLenMsg;
-    CConnection(boost::asio::io_service &io_service, ape::protocol::ParserFactory *factory, CSession *o);
+    CConnection(boost::asio::io_service &io_service, ape::protocol::EProtocolType pro, CSession *o);
     ~CConnection();
     void AsyncConnect(const std::string &ip, unsigned int port, int timeout = 3);
     void AsyncRead();
     void AsyncWrite(ape::message::SNetMessage *msg, bool close = false);
     void HandleSendResponse(const std::string &strResponse);
     void OnPeerClose();
-    void Dump();    
+    void Dump();
     void SetOwner(CSession *o) {session_ = o;}
     unsigned int Id(){return id_;}
     boost::asio::ip::tcp::socket& Socket(){return socket_;}
@@ -52,7 +52,7 @@ private:
     boost::asio::deadline_timer conn_timer_;
     ape::common::CBuffer buffer_;
     unsigned int id_;
-    static unsigned int sm_mark_;    
+    static unsigned int sm_mark_;
     std::string remoteip_;
     unsigned int remoteport_;
     ape::common::CHandlerAllocator conn_alloc_;

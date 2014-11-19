@@ -14,8 +14,8 @@ int CTcpSocketServer::StartServer(const std::string &addr) {
     BS_XLOG(XLOG_DEBUG,"CTcpSocketServer::%s, addr[%s]...\n",__FUNCTION__, addr.c_str());
     char ip[32] = {0};
     unsigned int port;
-    
-    if (0 != ape::protocol::ParseAddr(addr, &proto_, ip, &port)) {
+
+    if (0 != ape::protocol::ParseAddr(addr.c_str(), &proto_, ip, &port)) {
         BS_XLOG(XLOG_FATAL,"CTcpSocketServer::%s, bad addr[%s]...\n",__FUNCTION__, addr.c_str());
         return -1;
     }
@@ -58,8 +58,8 @@ void CTcpSocketServer::HandleStop() {
 
 void CTcpSocketServer::StartAccept() {
     BS_XLOG(XLOG_DEBUG,"CTcpSocketServer::%s...\n",__FUNCTION__);
-    CSessionCallBack *session_callback = holder_->GetSessionCallBack();    
-    CSession *session = ape::protocol::CreateSession(proto_);
+    CSessionCallBack *session_callback = holder_->GetSessionCallBack();
+    CSession *session = ape::net::SessionFactory::CreateSession(proto_);
     session->Init(*(session_callback->GetIoService()), proto_, session_callback, NULL);
     acceptor_.async_accept(session->GetConnectPrt()->Socket(),
         MakeAllocHandler(alloc_, boost::bind(&CTcpSocketServer::HandleAccept, this, session,
@@ -71,7 +71,7 @@ void CTcpSocketServer::HandleAccept(CSession *session, const boost::system::erro
     if (!err) {
         Connection_ptr conn = session->GetConnectPrt();
         conn->Socket().get_io_service().post(boost::bind(&CSession::OnAccept, session));
-        conn->AsyncRead();    
+        conn->AsyncRead();
         StartAccept();
     } else if(running_) {
         BS_SLOG(XLOG_WARNING,"CTcpSocketServer::HandleAccept, error:"<< err.message() << "\n");

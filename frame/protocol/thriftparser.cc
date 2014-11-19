@@ -7,6 +7,8 @@
 
 namespace ape{
 namespace protocol{
+ThriftParserFactory ThriftParserFactory::thrift_parser_factory_;
+
 typedef struct stThriftHead {
     uint32_t size;
     uint16_t version;
@@ -36,7 +38,7 @@ const char *CThriftParser::Decode(const char *buf, int len, ape::message::SNetMe
     if (head.size + 4 > len) {
         return buf;
     }
-    
+
     ape::message::SThriftMessage *message = (ape::message::SThriftMessage *)msg;
     if (head.type == T_CALL || head.type == T_ONEWAY) {
         message->type = ape::message::SNetMessage::E_Request;

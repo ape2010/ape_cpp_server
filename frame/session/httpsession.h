@@ -26,6 +26,20 @@ class CHttpSession : public CSession {
     unsigned int dwseq;
     std::deque<SResponseItem> request_deque_;
 };
+
+class HttpSessionFactory: public SessionFactory {
+ public:
+    HttpSessionFactory() {
+        RegisterFactory(ape::protocol::E_PROTOCOL_HTTP);
+    }
+    virtual CSession *CreateSession() {
+        return new CHttpSession();
+    }
+    virtual ~HttpSessionFactory() {}
+ private:
+    static HttpSessionFactory http_session_factory_;
+};
+
 }
 }
 #endif

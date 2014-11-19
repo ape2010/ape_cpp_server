@@ -6,9 +6,8 @@
 
 namespace ape {
 namespace protocol {
-int ParseAddr(const std::string &addr, EProtocol *proto, char *ip, unsigned int *port);
-ParserFactory *GetParserFactory(EProtocol p);
-ape::net::CSession *CreateSession(EProtocol p);
+int ParseAddr(const char *addr, EProtocolType *proto, char *ip, unsigned int *port);
+
 }
 }
 

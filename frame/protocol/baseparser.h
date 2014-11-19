@@ -3,7 +3,8 @@
 #include "events.h"
 #include "buffer.h"
 #include "protocol.h"
-#include <list>
+#include <vector>
+#include <boost/thread/mutex.hpp>
 
 namespace ape{
 namespace protocol{
@@ -24,8 +25,14 @@ class CBaseParser {
 };
 class ParserFactory {
  public:
-  virtual CBaseParser *CreateParser() = 0;
-  virtual ~ParserFactory() {}
+    ParserFactory() {}
+    virtual ~ParserFactory() {}
+    virtual CBaseParser *CreateParser() = 0;
+    void RegisterFactory(EProtocolType protocol);
+
+    static CBaseParser *CreateParser(EProtocolType protocol);
+ private:
+    static ParserFactory *factories_[E_PROTOCOL_ALL];
 };
 
 
