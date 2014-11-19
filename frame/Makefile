@@ -10,7 +10,7 @@ XLOG=$(HOME)/local/xlog
 
 INSTALLDIR=$(HOME)/local/ape
 
-DIR_LIST=./common ./interface ./net ./protocol ./session ./tinyxml2
+DIR_LIST=./common ./interface ./net ./protocol ./session ./tinyxml2 ./event
 OutPut=build/
 NEW_CODE_PATH=./
 #SOURCE CODE
@@ -54,7 +54,7 @@ LIB_DIR=-L/usr/local/lib
 LIBS=-Wall, --export-dynamic
 
 LDFLAGS=$(LIB_DIR) $(LIBS)
-CPPFLAGS=$(INC_DIR) $(DFLAGS)  -DTIXML_USE_STL 
+CPPFLAGS=$(INC_DIR) $(DFLAGS)  -DTIXML_USE_STL
 
 EXE1=$(OutPut)/libape.a
 
@@ -65,7 +65,7 @@ include $(DEPS)
 $(EXE1):$(OBJS) $(OBJS2) $(OBJS3)
 	ar -r $@ ./build/*/*.o
 
-	
+
 ./$(OutPut)/%.o:%.cc
 	$(CC) -g -O2 -o $@ -c -fPIC $< $(CPPFLAGS)
 ./$(OutPut)/%.d:%.cc
@@ -73,7 +73,7 @@ $(EXE1):$(OBJS) $(OBJS2) $(OBJS3)
 	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
 	sed 's,.*\.o[ :]*,$(patsubst %.d,%.o,$@) $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
-	
+
 ./$(OutPut)/%.o:%.cpp
 	$(CC) -g -O2 -o $@ -c -fPIC $< $(CPPFLAGS)
 ./$(OutPut)/%.d:%.cpp
