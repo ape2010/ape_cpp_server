@@ -1,6 +1,7 @@
 #ifndef _APE_COMMON_THRIFT_PARSER_H_
 #define _APE_COMMON_THRIFT_PARSER_H_
 #include "baseparser.h"
+#include "thriftmessage.h"
 
 namespace ape{
 namespace protocol{

@@ -1,6 +1,7 @@
 #ifndef _APE_HTTP_PARSER_H_
 #define _APE_HTTP_PARSER_H_
 #include "baseparser.h"
+#include "httpmessage.h"
 #include <list>
 
 namespace ape{

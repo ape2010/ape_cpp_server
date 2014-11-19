@@ -2,6 +2,7 @@
 #define _APE_COMMON_HTTP_SESSION_H_
 
 #include "session.h"
+#include "httpmessage.h"
 #include <deque>
 
 namespace ape{
