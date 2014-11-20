@@ -1,6 +1,7 @@
 #ifndef _APE_MONITOR_BUSINESS_HANDLE_H_
 #define _APE_MONITOR_BUSINESS_HANDLE_H_
 #include <ape/events.h>
+#include <ape/thriftmessage.h>
 #include <ape/netservice.h>
 #include <vector>
 #include <string>

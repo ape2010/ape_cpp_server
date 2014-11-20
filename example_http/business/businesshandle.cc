@@ -24,16 +24,16 @@ void CBusinessHandle::StartInThread(int threadid, ape::net::CNetService *service
 }
 void CBusinessHandle::OnEvent(int threadid, void *event) {
     ape::message::SEvent *e = (ape::message::SEvent *)event;
-    BS_XLOG(XLOG_TRACE,"CBusinessHandle::%s, type[%d], threadid[%d]\n", __FUNCTION__, e->id, threadid);
+    BS_XLOG(XLOG_TRACE,"CBusinessHandle::%s, event_id[%d], threadid[%d]\n", __FUNCTION__, e->id, threadid);
     switch (e->id) {
-      case ape::message::HTTP_MESSAGE_EVENT: {
+      case ape::message::SHttpMessage::ID: {
         ape::message::SHttpMessage * msg = (ape::message::SHttpMessage *)e;
         if (!msg->IsReply()) {
             DealHttpRequest(msg);
         }
         break;
       }
-      case ape::message::THRIFT_MESSAGE_EVENT: {
+      case ape::message::SThriftMessage::ID: {
         ape::message::SThriftMessage * msg = (ape::message::SThriftMessage *)e;
         if (msg->IsReply()) {
             DealThriftResponse(msg);
@@ -43,7 +43,7 @@ void CBusinessHandle::OnEvent(int threadid, void *event) {
       }
       default: {
         delete e;
-        break;        
+        break;
       }
     }
 }
@@ -55,14 +55,14 @@ void CBusinessHandle::DealThriftResponse(ape::message::SThriftMessage *message) 
     boost::shared_ptr<apache::thrift::protocol::TBinaryProtocol> pro(new apache::thrift::protocol::TBinaryProtocol(buf));
     teststudent::Serv_QueryByNo_result result;
     result.read(pro.get());
-    
+
     teststudent::Student &stu = result.success;
-    BS_XLOG(XLOG_DEBUG,"BusinessThread::%s, result.__isset.success[%d], no[%s], name[%s], age[%d]\n", __FUNCTION__, 
+    BS_XLOG(XLOG_DEBUG,"BusinessThread::%s, result.__isset.success[%d], no[%s], name[%s], age[%d]\n", __FUNCTION__,
         result.__isset.success, stu.no.c_str(), stu.name.c_str(), stu.age);
 
     SThriftContext *ctx = (SThriftContext *)(message->ctx);
     char szstu[1024] = {0};
-    snprintf(szstu, 1023, "{\"return_code\":0, \"return_message\":\"success\",\"data\":{\"no\":\"%s\",\"name\":\"%s\",\"age\":\"%d\"}}", 
+    snprintf(szstu, 1023, "{\"return_code\":0, \"return_message\":\"success\",\"data\":{\"no\":\"%s\",\"name\":\"%s\",\"age\":\"%d\"}}",
         stu.no.c_str(), stu.name.c_str(), stu.age);
     DoSendHttpResponse(ctx->httpmsg, 200, szstu);
     delete ctx;
@@ -88,18 +88,18 @@ void CBusinessHandle::DoSendHttpResponse(ape::message::SHttpMessage *request, in
 void CBusinessHandle::DoTestThriftRequest(ape::message::SHttpMessage *message) {
     teststudent::Serv_QueryByNo_args args;
     args.no = "0743111245";
-    
+
     boost::shared_ptr<apache::thrift::transport::TMemoryBuffer> buf(new apache::thrift::transport::TMemoryBuffer(1024));
     boost::shared_ptr<apache::thrift::protocol::TBinaryProtocol> pro(new apache::thrift::protocol::TBinaryProtocol(buf));
     buf->open();
     args.write(pro.get());
-    
+
     ape::message::SThriftMessage *msg = new ape::message::SThriftMessage;
     msg->method = "QueryByNo";
     msg->seqid = smseqid_++;
     msg->body = buf->getBufferAsString();
     msg->ctx = new SThriftContext(message);
-    
+
     std::string addr = "thrift://127.0.0.1:10012";
     service_->DoConnect(addr, addr, true, 5000);
     service_->DoSendTo(addr, msg);

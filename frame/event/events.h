@@ -14,14 +14,17 @@ namespace ape {
 namespace message {
 
 typedef struct stEvent {
+    int id;
+    stEvent(int i = -1) : id(i) {}
     virtual ~stEvent(){}
     virtual std::string NoticeInfo() = 0;
     virtual void Dump() = 0;
 }SEvent;
 
-template <int id, class BaseClass = SEvent>
+template <int tid, class BaseClass = SEvent>
 struct SEventType : public BaseClass {
-    enum {ID=id};
+    enum {ID=tid};
+    SEventType() : BaseClass(tid) {}
     virtual ~SEventType() {}
 };
 
@@ -30,7 +33,7 @@ typedef struct stNetEvent : public SEvent {
     unsigned int port;
     unsigned int connid;
     struct timeval time;
-    stNetEvent() : port(0) {memset(ip, 0, 16);}
+    stNetEvent(int id=-1) : SEvent(id), port(0) {memset(ip, 0, 16);}
     virtual ~stNetEvent(){}
     virtual std::string NoticeInfo() {
         char sz[32] = {0};
@@ -60,7 +63,7 @@ typedef struct stNetMessage : public SNetEvent {
     void SetReply(int n = 0) {type = E_Response; code = n;}
     bool IsReply() {return type == E_Response;}
     virtual bool IsOk() {return code == 0;}
-    stNetMessage() : type(E_Request), isheartbeat(false), code(-1), ctx(NULL){}
+    stNetMessage(int id=-1) : SNetEvent(id), type(E_Request), isheartbeat(false), code(-1), ctx(NULL){}
     virtual ~stNetMessage(){ }
 }SNetMessage;
 

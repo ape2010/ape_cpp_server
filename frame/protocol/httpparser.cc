@@ -7,8 +7,6 @@
 namespace ape{
 namespace protocol{
 
-HttpParserFactory HttpParserFactory::http_parser_factory_;
-
 static inline std::string trim(const char *buf, int len, bool tolowercase = false) {
     const char *begin = buf;
     const char *end = buf + len - 1;

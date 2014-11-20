@@ -47,7 +47,7 @@ void CSocSessionManager::DoSendBack(unsigned int connid, void *para) {
 }
 
 void CSocSessionManager::DoCheckSession() {
-    //BS_XLOG(XLOG_DEBUG,"CSocSessionManager::%s, sessions_.size[%u]...\n",__FUNCTION__, sessions_.size());
+    //BS_XLOG(XLOG_TRACE,"CSocSessionManager::%s, sessions_.size[%u]...\n",__FUNCTION__, sessions_.size());
     std::map<unsigned int, CSession*>::iterator itr = sessions_.begin();;
     while(itr != sessions_.end()) {
         std::map<unsigned int, CSession*>::iterator tmp = itr++;

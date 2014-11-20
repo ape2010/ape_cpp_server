@@ -11,7 +11,7 @@ XLOG=$(HOME)/local/xlog
 MONGOC=$(HOME)/local/mongo-c-driver
 JSON=$(HOME)/local/json
 
-DIR_LIST=../interface ../common ../net ../protocol ../tinyxml2 ../session ./src 
+DIR_LIST=../interface ../common ../net ../protocol ../tinyxml2 ../session ../event ./src
 OutPut=build/test/
 NEW_CODE_PATH=./
 #SOURCE CODE
@@ -46,17 +46,17 @@ endef
 $(foreach dir,$(CC_DIRS),$(eval $(call SAFE_MKDIR,$(dir))))
 
 
-INC_DIR+=-I$(GTEST)/include -I$(XLOG)/include -I$(MONGOC)/include/libbson-1.0 -I$(MONGOC)/include/libmongoc-1.0
+INC_DIR+=-I$(GTEST)/include -I$(XLOG)/include #-I$(MONGOC)/include/libbson-1.0 #-I$(MONGOC)/include/libmongoc-1.0
 INC_DIR+=-I$(JSON)/include/json
 #LIB_DIR
 
-LIB_DIR=-L/usr/local/lib -L $(GTEST)/lib $(XLOG)/lib/libxlog.a -L$(JSON)/lib 
-LIB_DIR+=-L$(MONGOC)/lib $(MONGOC)/lib/libbson-1.0.a 
+LIB_DIR=-L/usr/local/lib -L $(GTEST)/lib $(XLOG)/lib/libxlog.a -L$(JSON)/lib
+#LIB_DIR+=-L$(MONGOC)/lib #$(MONGOC)/lib/libbson-1.0.a
 
 LIBS=-lz -lrt -lgtest -lboost_thread -lboost_system -lpthread -Wall -ldl -Wl,--export-dynamic
 
 LDFLAGS=$(LIB_DIR) $(LIBS)
-CPPFLAGS=$(INC_DIR) $(DFLAGS)  -DTIXML_USE_STL 
+CPPFLAGS=$(INC_DIR) $(DFLAGS)  -DTIXML_USE_STL
 
 EXE1=./test
 
@@ -67,7 +67,7 @@ include $(DEPS)
 $(EXE1):$(OBJS) $(OBJS2) $(OBJS3)
 	$(CC) -g  -O2 -o $@ $^ $(LDFLAGS)
 
-	
+
 ./$(OutPut)/%.o:%.cc
 	$(CC) -g -O2 -o $@ -c -fPIC $< $(CPPFLAGS)
 ./$(OutPut)/%.d:%.cc
@@ -75,7 +75,7 @@ $(EXE1):$(OBJS) $(OBJS2) $(OBJS3)
 	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
 	sed 's,.*\.o[ :]*,$(patsubst %.d,%.o,$@) $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
-	
+
 ./$(OutPut)/%.o:%.cpp
 	$(CC) -g -O2 -o $@ -c -fPIC $< $(CPPFLAGS)
 ./$(OutPut)/%.d:%.cpp
@@ -101,13 +101,13 @@ srczip:
 	zip -r ./$(EXE1)_src_$(VER).zip * -x *.o *.d *.svn *.zip *.a *.so $(EXE1) *.svn-work *.svn-base *.so.* *.d.* *.svn/*
 binzip:
 	if [ ! -d "release" ];  then mkdir release; fi;
-	cd release;if [ ! -d "lib" ];  then mkdir lib; fi;  
+	cd release;if [ ! -d "lib" ];  then mkdir lib; fi;
 	cd release;if [ ! -d "plugin" ];  then mkdir plugin; fi;
 	cp ./AutoTestServer ./release
 	cp -r ./service ./release
 	cp ./log.properties ./release/log.properties
 	cp ./*.xml ./release/
-	
+
 	ldd ./AutoTestServer>sys_so_111_232_876_23;cp `awk  '{if(substr($$3,1,4)!="/lib"&&substr($$3,1,8)!="/usr/lib")print $$3}' sys_so_111_232_876_23` ./release/lib/;rm -rf sys_so_111_232_876_23
 	cd release; zip -r ../AutoTestServer_$(VER)_$(OS)_Gcc$(GCC)_X86.zip *
 	rm -rf release

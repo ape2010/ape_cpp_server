@@ -19,7 +19,7 @@ void CBusinessHandle::OnEvent(int threadid, void *event) {
     ape::message::SEvent *e = (ape::message::SEvent *)event;
     BS_XLOG(XLOG_TRACE,"CBusinessHandle::%s, type[%d], threadid[%d]\n", __FUNCTION__, e->id, threadid);
     switch (e->id) {
-      case ape::message::THRIFT_MESSAGE_EVENT: {
+      case ape::message::SThriftMessage::ID: {
         ape::message::SThriftMessage * msg = (ape::message::SThriftMessage *)e;
         if (!msg->IsReply()) {
             DealThriftRequest(msg);
@@ -29,7 +29,7 @@ void CBusinessHandle::OnEvent(int threadid, void *event) {
       }
       default: {
         delete e;
-        break;        
+        break;
       }
     }
 }
@@ -47,12 +47,12 @@ void CBusinessHandle::DealThriftRequest(ape::message::SThriftMessage *message) {
     result.success.name = "test_student_xiaozhai";
     result.success.age = 24;
     result.__isset.success = true;
-    
+
     buf.reset(new apache::thrift::transport::TMemoryBuffer(10240));
     buf->open();
     pro.reset(new apache::thrift::protocol::TBinaryProtocol(buf));
     result.write(pro.get());
-    
+
     ape::message::SThriftMessage *resmsg = new ape::message::SThriftMessage;
     resmsg->method = "QueryByNo";
     resmsg->seqid = message->seqid;

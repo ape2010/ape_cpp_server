@@ -1,6 +1,8 @@
 #ifndef _APE_TEST_BUSINESS_HANDLE_H_
 #define _APE_TEST_BUSINESS_HANDLE_H_
 #include <ape/events.h>
+#include <ape/httpmessage.h>
+#include <ape/thriftmessage.h>
 #include <ape/netservice.h>
 #include <vector>
 #include <string>
@@ -27,7 +29,7 @@ class CBusinessHandle : public ape::net::CHandle {
     int threadid_;
     ape::net::CNetService *service_;
     ape::common::CTimerManager *timerowner_;
-    
+
     uint32_t smseqid_;
 };
 }

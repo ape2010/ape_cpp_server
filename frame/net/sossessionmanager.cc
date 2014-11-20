@@ -45,7 +45,7 @@ class CSosSessionManager::CShortSessionContainer : public CSosSessionManager::CS
         return -1;
     }
     virtual void CheckSession() {
-    	BS_XLOG(XLOG_DEBUG,"CShortSessionContainer::%s, sessions_.size[%u]\n",__FUNCTION__,sessions_.size());
+    	BS_XLOG(XLOG_TRACE,"CShortSessionContainer::%s, sessions_.size[%u]\n",__FUNCTION__,sessions_.size());
         boost::unordered_map<std::string, CSession*>::iterator itr = sessions_.begin();;
         while(itr != sessions_.end()) {
             boost::unordered_map<std::string, CSession*>::iterator tmp = itr++;
@@ -136,7 +136,7 @@ class CSosSessionManager::CPersistentSessionContainer : public CSosSessionManage
         return -1;
     }
     virtual void CheckSession() {
-    	BS_XLOG(XLOG_DEBUG,"CPersistentSessionContainer::%s, addr_sessions_.size[%u], session_groups_.size[%u]\n",__FUNCTION__,
+    	BS_XLOG(XLOG_TRACE,"CPersistentSessionContainer::%s, addr_sessions_.size[%u], session_groups_.size[%u]\n",__FUNCTION__,
 			addr_sessions_.size(), session_groups_.size());
 		/*
 		boost::unordered_map<std::string, CSession*>::iterator itrs = addr_sessions_.begin();;
@@ -263,7 +263,7 @@ int CSosSessionManager::OnPeerClose(void *session) {
 }
 
 void CSosSessionManager::DoCheckSession() {
-    BS_XLOG(XLOG_DEBUG,"CSosSessionManager::%s\n",__FUNCTION__);
+    BS_XLOG(XLOG_TRACE,"CSosSessionManager::%s\n",__FUNCTION__);
     short_sessions_->CheckSession();
     persistent_sessions_->CheckSession();
 }

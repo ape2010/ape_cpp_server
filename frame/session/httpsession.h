@@ -31,7 +31,7 @@ class CHttpSession : public CSession {
 class HttpSessionFactory: public SessionFactory {
  public:
     HttpSessionFactory() {
-        RegisterFactory(ape::protocol::E_PROTOCOL_HTTP);
+        SessionFactory::RegisterFactory(ape::protocol::E_PROTOCOL_HTTP, this);
     }
     virtual CSession *CreateSession() {
         return new CHttpSession();

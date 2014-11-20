@@ -238,21 +238,6 @@ void CSession::Dump() {
     BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], request_history_.size[%u]\n", __FUNCTION__, Id(), request_history_.size());
 }
 
-/**************************************************************************************/
-/*********  SessionFactory ************************************************************/
-/**************************************************************************************/
-SessionFactory *SessionFactory::factories_[ape::protocol::E_PROTOCOL_ALL] = {NULL};
-CSession *SessionFactory::CreateSession(ape::protocol::EProtocolType protocol) {
-    if (protocol >= ape::protocol::E_PROTOCOL_ALL) {
-        BS_XLOG(XLOG_ERROR, "SessionFactory::%s, bad protocol[%d]\n", __FUNCTION__, protocol);
-        return NULL;
-    }
-
-    return  factories_[protocol] != NULL ? factories_[protocol]->CreateSession() : new CSession();
-}
-void SessionFactory::RegisterFactory(ape::protocol::EProtocolType protocol) {
-    factories_[protocol] = this;
-}
 
 }
 }

@@ -77,8 +77,8 @@ class SessionFactory {
     SessionFactory() {}
     virtual ~SessionFactory() {}
     virtual CSession *CreateSession() = 0;
-    void RegisterFactory(ape::protocol::EProtocolType protocol);
 
+    static void RegisterFactory(ape::protocol::EProtocolType protocol, SessionFactory *factory);
     static CSession *CreateSession(ape::protocol::EProtocolType protocol);
  private:
     static SessionFactory *factories_[ape::protocol::E_PROTOCOL_ALL];

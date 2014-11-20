@@ -19,7 +19,7 @@ class CThriftParser : public CBaseParser{
 class ThriftParserFactory: public ParserFactory {
  public:
     ThriftParserFactory() {
-        RegisterFactory(E_PROTOCOL_HTTP);
+        ParserFactory::RegisterFactory(E_PROTOCOL_THRIFT, this);
     }
     virtual CBaseParser *CreateParser() {
         return new CThriftParser();

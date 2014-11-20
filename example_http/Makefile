@@ -51,10 +51,10 @@ INC_DIR+=-I/usr/include -I$(XLOG)/include -I$(THRIFT)/include -I$(APE)/include
 
 LIB_DIR=-L/usr/local/lib $(XLOG)/lib/libxlog.a  $(THRIFT)/lib/libthrift.a $(APE)/lib/libape.a
 #-ltcmalloc
-LIBS=-lz -lrt -lboost_thread -lboost_system -lpthread -Wall -ldl -Wl,--export-dynamic
+LIBS=-lz -lrt -lboost_thread -lboost_system -lpthread -Wall -ldl -Wl,--export-dynamic --whole-archive
 
 LDFLAGS=$(LIB_DIR) $(LIBS)
-CPPFLAGS=$(INC_DIR) $(DFLAGS)  -DTIXML_USE_STL 
+CPPFLAGS=$(INC_DIR) $(DFLAGS)  -DTIXML_USE_STL
 
 EXE1=./test_ape_http
 
@@ -65,7 +65,7 @@ include $(DEPS)
 $(EXE1):$(OBJS) $(OBJS2) $(OBJS3)
 	$(CC) -g  -O2 -o $@ $^ $(LDFLAGS)
 
-	
+
 ./$(OutPut)/%.o:%.cc
 	$(CC) -g -O2 -o $@ -c -fPIC $< $(CPPFLAGS)
 ./$(OutPut)/%.d:%.cc
@@ -73,7 +73,7 @@ $(EXE1):$(OBJS) $(OBJS2) $(OBJS3)
 	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
 	sed 's,.*\.o[ :]*,$(patsubst %.d,%.o,$@) $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
-	
+
 ./$(OutPut)/%.o:%.cpp
 	$(CC) -g -O2 -o $@ -c -fPIC $< $(CPPFLAGS)
 ./$(OutPut)/%.d:%.cpp
@@ -99,7 +99,7 @@ srczip:
 	zip -r ./$(EXE1)_src_$(VER).zip * -x *.o *.d *.svn *.zip *.a *.so $(EXE1) *.svn-work *.svn-base *.so.* *.d.* *.svn/*
 binzip:
 	if [ ! -d "release" ];  then mkdir release; fi;
-	cd release;if [ ! -d "lib" ];  then mkdir lib; fi;  
+	cd release;if [ ! -d "lib" ];  then mkdir lib; fi;
 	cd release;if [ ! -d "plugin/httptransfer" ];  then mkdir -p plugin/httptransfer; fi;
 	cd release;if [ ! -d "plugin/rapidtransfer" ];  then mkdir -p plugin/rapidtransfer; fi;
 	cd release;if [ ! -d "plugin/weaktransfer" ];  then mkdir -p plugin/weaktransfer; fi;
@@ -107,7 +107,7 @@ binzip:
 	cp -r ./conf ./release/conf
 	cp  ./run.sh ./release/run.sh
 	cp  $(HOME)/local/json/lib/libjson.so.0.1.0 ./release/lib/libjson.so.0
-	
+
 	ldd ./beacon>sys_so_111_232_876_23;cp `awk  '{if(substr($$3,1,4)!="/lib"&&substr($$3,1,8)!="/usr/lib")print $$3}' sys_so_111_232_876_23` ./release/lib/;rm -rf sys_so_111_232_876_23
 	cd release; zip -r ../Beacon$(VER)_$(OS)_Gcc$(GCC)_X86.zip *
 	rm -rf release
@@ -120,13 +120,13 @@ packet:
 	if [ ! -d "release/usr/local/$(EXEDIR)/plugin" ];  then mkdir -p release/usr/local/$(EXEDIR)/plugin; fi;
 
 	cp $(EXE1) ./release/usr/local/$(EXEDIR)/
-	cp ./conf/* ./release/usr/local/$(EXEDIR)/conf/ 
+	cp ./conf/* ./release/usr/local/$(EXEDIR)/conf/
 	cp ./run.sh ./release/usr/local/$(EXEDIR)/
 	cp  $(HOME)/local/json/lib/libjson.so.0.1.0 ./release/usr/local/$(EXEDIR)/lib/libjson.so.0
 	cp -r ./plugin/* ./release/usr/local/$(EXEDIR)/plugin/
 	cp -r ./dist/DEBIAN ./release/
 	cp -r ./dist/etc ./release/
-  
+
 	chmod -R +x ./release/*
 	chmod +x ./release/usr/local/$(EXEDIR)/*
 	chmod 755 ./release/DEBIAN/*

@@ -10,7 +10,7 @@ namespace testhttp {
 static void ParseUrl(const std::string &url, CohThread::SUrlInfo *info) {
     char szhost[128]={0};
     char szpath[256]={0};
-    
+
     sscanf(url.c_str(), "%*[HTTPhttp]://%[^/]%256s", szhost, szpath);
     info->addr = std::string("http://") + szhost;
     info->name = std::string("monitor_") + szhost;
@@ -32,7 +32,7 @@ CohThread::~CohThread() {
 int CohThread::StartServer(const std::string &addr) {
     CohHandleFactory factory;
     holder_.Start(&factory, 0);
-    
+
     std::vector<std::string> addrs;
     addrs.push_back(addr);
     return holder_.StartServer(addrs);
@@ -75,7 +75,7 @@ void CohThread::OnEvent(int threadid, void *event) {
     ape::message::SEvent *e = (ape::message::SEvent *)event;
     BS_XLOG(XLOG_TRACE,"CohThread::%s, type[%d], threadid[%d]\n", __FUNCTION__, e->id, threadid);
     switch (e->id) {
-      case ape::message::HTTP_MESSAGE_EVENT: {
+      case ape::message::SHttpMessage::ID: {
         ape::message::SHttpMessage *message = (ape::message::SHttpMessage *)e;
         message->Dump();
         if (message->type == ape::message::SNetMessage::E_Request) {
@@ -86,7 +86,7 @@ void CohThread::OnEvent(int threadid, void *event) {
       }
       default: {
         delete e;
-        break;        
+        break;
       }
     }
 }
@@ -105,7 +105,7 @@ void CohThread::DealCohCmd(ape::message::SHttpMessage *message) {
     response->requestno = message->requestno;
     response->keepalive = message->keepalive;
     response->httpversion = message->httpversion;
-    service_->DoSendBack(message->connid, response);    
+    service_->DoSendBack(message->connid, response);
 }
 std::string CohThread::DoHelpInfo(ape::message::SHttpMessage *message) {
     std::string str = "<html><head><title>Help</title></head><body><table border='1' align='center'>";

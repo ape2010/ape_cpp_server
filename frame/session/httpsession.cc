@@ -4,7 +4,6 @@
 
 namespace ape{
 namespace net{
-HttpSessionFactory HttpSessionFactory::http_session_factory_;
 
 CHttpSession::~CHttpSession() {
     while( !request_deque_.empty()) {

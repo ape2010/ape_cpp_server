@@ -17,6 +17,10 @@ CConnection::CConnection(boost::asio::io_service &io_service, ape::protocol::EPr
     remoteport_(0), connected_(true), close_after_write_(false), session_(o)
 {
     parser_ = ape::protocol::ParserFactory::CreateParser(pro);
+    if (parser_ == NULL) {
+        BS_XLOG(XLOG_FATAL,"CConnection::%s, parser is NULL, pro[%d]\n", __FUNCTION__, pro);
+        exit(-1);
+    }
 }
 CConnection::~CConnection() {
     if (parser_) {

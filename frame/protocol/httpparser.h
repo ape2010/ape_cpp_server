@@ -2,6 +2,7 @@
 #define _APE_HTTP_PARSER_H_
 #include "baseparser.h"
 #include "httpmessage.h"
+#include "loghelper.h"
 #include <list>
 
 namespace ape{
@@ -31,7 +32,7 @@ class CHttpParser : public CBaseParser{
 class HttpParserFactory: public ParserFactory {
  public:
     HttpParserFactory() {
-        RegisterFactory(E_PROTOCOL_HTTP);
+        ParserFactory::RegisterFactory(E_PROTOCOL_HTTP, this);
     }
     virtual CBaseParser *CreateParser() {
         return new CHttpParser();

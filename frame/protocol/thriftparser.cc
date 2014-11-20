@@ -7,7 +7,6 @@
 
 namespace ape{
 namespace protocol{
-ThriftParserFactory ThriftParserFactory::thrift_parser_factory_;
 
 typedef struct stThriftHead {
     uint32_t size;

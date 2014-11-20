@@ -28,9 +28,9 @@ class ParserFactory {
     ParserFactory() {}
     virtual ~ParserFactory() {}
     virtual CBaseParser *CreateParser() = 0;
-    void RegisterFactory(EProtocolType protocol);
-
+    void RegisterFactory(EProtocolType protocol, ParserFactory*factory);
     static CBaseParser *CreateParser(EProtocolType protocol);
+    static void Dump();
  private:
     static ParserFactory *factories_[E_PROTOCOL_ALL];
 };

@@ -3,6 +3,7 @@
 #include <ape/netthreadholder.h>
 #include <ape/netservice.h>
 #include <ape/events.h>
+#include <ape/httpmessage.h>
 #include <vector>
 #include <string>
 
@@ -14,7 +15,7 @@ class CohThread : public ape::net::CHandle {
     typedef enum{FUNC_HELP = 0, FUNC_ALL}EFuncType;
     typedef std::string (CohThread::*DealCmdFunc)(ape::message::SHttpMessage *);
     typedef struct stFuncInfo {
-        EFuncType type; 
+        EFuncType type;
         std::string desc;
         stFuncInfo(){}
         stFuncInfo(EFuncType t, const std::string &s) : type(t), desc(s){}
@@ -39,7 +40,7 @@ class CohThread : public ape::net::CHandle {
         std::string path;
     }SUrlInfo;
  private:
-    CohThread();    
+    CohThread();
     void DealCohCmd(ape::message::SHttpMessage *message);
     std::string DoHelpInfo(ape::message::SHttpMessage *message);
  private:
