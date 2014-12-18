@@ -31,6 +31,7 @@ CSession::~CSession() {
         delete timer_reconn_;
     }
     owner_ = NULL;
+    CleanRequestAndCallBack();
 }
 void CSession::Connect(const std::string &ip, unsigned int port) {
     ip_ = ip;
@@ -47,8 +48,8 @@ void CSession::ConnectResult(int result) {
                 unsigned int interval = heartbeatinterval_ < 1000 ? 1000 : heartbeatinterval_;
                 timer_heartbeat_ = new ape::common::CThreadTimer(timer_owner_, interval,
                     boost::bind(&CSession::DoHeartBeat, this), ape::common::CThreadTimer::TIMER_CIRCLE);
+                timer_heartbeat_->Start();
             }
-            timer_heartbeat_->Start();
         }
         if (NULL != timer_reconn_) {
             timer_reconn_->Stop();
@@ -62,20 +63,21 @@ void CSession::ConnectResult(int result) {
             timer_reconn_->Start();
         }
     }
+    OnConnected();
 
     DealWaitingList();
 }
 void CSession::DoConnect() {
     BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status_[%s], addr[%s:%u]\n", __FUNCTION__, Id(), ConnectStatus[status_], ip_.c_str(), port_);
-	if (status_ == CONNECTED || status_ == CONNECTING) {
+    ptrconn_->SetOwner(this);
+    if (status_ == CONNECTED || status_ == CONNECTING) {
 		return;
 	}
-	status_ = CONNECTING;
-    ptrconn_->SetOwner(this);
+    status_ = CONNECTING;
     ptrconn_->AsyncConnect(ip_, port_);
 }
 void CSession::DoHeartBeat() {
-    if (status_ != CONNECTED) {
+    if (status_ != CONNECTED && status_ != TIME_OUT) {
         return;
     }
     ape::message::SNetMessage *msg = ptrconn_->GetParser()->CreateHeartBeatMessage();
@@ -88,11 +90,15 @@ void CSession::DoHeartBeat() {
     delete msg;
 }
 void CSession::OnAccept() {
-    owner_->OnAccept(this);
+    status_ = CONNECTED;
+    if (owner_) {
+        owner_->OnAccept(this);
+    }
 }
 void CSession::OnConnected() {
-    status_ = CONNECTED;
-    owner_->OnConnected(this);
+    if (owner_) {
+        owner_->OnConnected(this);
+    }
 }
 void CSession::OnPeerClose() {
     BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], addr[%s:%u], autoreconn[%d]\n",__FUNCTION__, Id(), GetRemoteIp().c_str(),
@@ -104,7 +110,7 @@ void CSession::OnPeerClose() {
             timer_reconn_ = new ape::common::CThreadTimer(timer_owner_, RECONNECT_INTERVAL,
                 boost::bind(&CSession::DoConnect, this), ape::common::CThreadTimer::TIMER_ONCE);
         }
-		status_ = WAITING;
+        status_ = WAITING;
         timer_reconn_->Start();
     } else if (owner_) {
         owner_->OnPeerClose(this);
@@ -113,7 +119,7 @@ void CSession::OnPeerClose() {
 void CSession::OnRead(ape::message::SNetMessage *msg) {
     if (msg->isheartbeat) {
         status_ = CONNECTED;
-        if (msg->type == ape::message::SNetMessage::E_Request) {
+        if (msg->direction == ape::message::SNetMessage::E_Request) {
             ape::message::SNetMessage *resmsg = ptrconn_->GetParser()->CreateHeartBeatMessage(ape::message::SNetMessage::E_Response);
             BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], addr[%s:%u]\n%s\n", __FUNCTION__, Id(), GetRemoteIp().c_str(), GetRemotePort(), resmsg->NoticeInfo().c_str());
             ptrconn_->AsyncWrite(resmsg);
@@ -122,48 +128,61 @@ void CSession::OnRead(ape::message::SNetMessage *msg) {
         delete msg;
         return;
     }
-    if (msg->type == ape::message::SNetMessage::E_Response) {
-		if (msg->IsOk()) {status_ = CONNECTED;}
+    if (msg->direction == ape::message::SNetMessage::E_Response) {
+        if (msg->IsOk()) {status_ = CONNECTED;}
         unsigned int seqid = msg->GetSequenceId();
         BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], seqid[%d], request_history_.size[%u]\n", __FUNCTION__, Id(), seqid, request_history_.size());
 
-        std::multimap<unsigned int, boost::shared_ptr<ape::common::CThreadTimer> >::iterator itr = request_history_.find(seqid);
-        if (itr != request_history_.end()) {
-            msg->ctx = ((ape::message::SNetMessage*)(itr->second->GetData()))->ctx;
-            itr->second->Stop();
-            itr->second->Callback(); //will call DoSendTimeOut
-            if (owner_) {
-                owner_->OnRead(this, msg);
-                return;
-            }
+        RequestHistory::iterator itr = request_history_.find(seqid);
+        if (itr == request_history_.end()) {
+            BS_XLOG(XLOG_WARNING,"CSession::%s, id[%u], no request msg for this response, seqid[%d], msg:\n%s\n", __FUNCTION__, Id(), seqid, msg->NoticeInfo().size());
+            delete msg;
+            return;
         }
-    } else  if (owner_) {
-    	status_ = CONNECTED;
-        owner_->OnRead(this, msg);
-        return;
+        /** erase request history and delete the request message */
+        ape::message::SNetMessage *reqmsg = (ape::message::SNetMessage*)(itr->second->GetData());
+        msg->ctx = reqmsg->ctx;
+        delete reqmsg;
+        itr->second->Stop();
+        request_history_.erase(itr);
     }
-    delete msg;
+
+    if (owner_) {
+        status_ = CONNECTED;
+        owner_->OnRead(this, msg);
+    } else {
+        delete msg;
+    }
 }
 void CSession::DoSendTo(void *para, int timeout) {
     ape::message::SNetMessage *msg = (ape::message::SNetMessage *)para;
-    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status[%s], addr[%s:%u], timeout[%d], msg:\n%s\n", __FUNCTION__, Id(),
-		ConnectStatus[status_], ip_.c_str(), port_, timeout, msg->NoticeInfo().c_str());
+    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status[%s], addr[%s:%u], timeout[%d], msg:%s\n", __FUNCTION__, Id(),
+        ConnectStatus[status_], ip_.c_str(), port_, timeout, msg->BriefInfo().c_str());
 
+    msg->connid = Id();
     if (status_ == CONNECTING || status_ == WAITING) {
         waitinglist_.push_back(SReadyPacket(para, timeout));
         return;
     }
+
+    if (msg->direction == ape::message::SNetMessage::E_Request) {
+        DoSendRequest(msg, timeout);
+    } else {
+        ptrconn_->AsyncWrite(msg, false);
+        delete msg;
+    }
+}
+void CSession::DoSendRequest(ape::message::SNetMessage *msg, int timeout) {
+    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status_[%s], addr[%s:%u], close[%d], timeout[%d]\n", __FUNCTION__, Id(),
+        ConnectStatus[status_], GetRemoteIp().c_str(), GetRemotePort(), close, timeout);
 
     if (status_ != CONNECTED) {
         msg->SetReply(ape::common::ERROR_PEER_CLOSE);
         owner_->OnRead(this, msg);
         return;
     }
-    DoSend(msg, timeout);
-}
-void CSession::DoSend(ape::message::SNetMessage *msg, int timeout) {
     boost::shared_ptr<ape::common::CThreadTimer> timer(new ape::common::CThreadTimer(timer_owner_, timeout,
-            boost::bind(&CSession::DoSendTimeOut, this, msg), ape::common::CThreadTimer::TIMER_ONCE, msg));
+            boost::bind(&CSession::DoRequestTimeOut, this, msg), ape::common::CThreadTimer::TIMER_ONCE, msg));
     timer->Start();
     request_history_.insert(std::make_pair(msg->GetSequenceId(), timer));
 
@@ -179,18 +198,23 @@ void CSession::DoSendBack(void *para, bool close) {
 void CSession::Close() {
     BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status_[%s], addr[%s:%u]\n", __FUNCTION__, Id(),
 		ConnectStatus[status_], GetRemoteIp().c_str(), GetRemotePort());
-    status_ = CLOSED;
     ptrconn_->SetOwner(NULL);
-    CleanRequestAndCallBack();
     owner_ = NULL;
+    if (status_ == CLOSED) {
+        BS_XLOG(XLOG_DEBUG,"CSession::%s, try to close session multi times, id[%u], status_[%s], addr[%s:%u]\n", __FUNCTION__, Id(),
+            ConnectStatus[status_], GetRemoteIp().c_str(), GetRemotePort());
+        return;
+    }
+    status_ = CLOSED;
+    CleanRequestAndCallBack();
 
     ptrconn_->OnPeerClose();
 }
 
-void CSession::DoSendTimeOut(void *para) {
+void CSession::DoRequestTimeOut(void *para) {
     ape::message::SNetMessage *msg = (ape::message::SNetMessage *)para;
     unsigned int seqid = msg->GetSequenceId();
-    std::multimap<unsigned int, boost::shared_ptr<ape::common::CThreadTimer> >::iterator itr = request_history_.find(seqid);
+    RequestHistory::iterator itr = request_history_.find(seqid);
     if (itr != request_history_.end()) {
         if (owner_ && ape::common::CThreadTimer::TIME_OUT == itr->second->GetStatus()) {
             BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], addr[%s:%u], error[%d] \n%s\n", __FUNCTION__, Id(), ip_.c_str(), port_,
@@ -203,34 +227,42 @@ void CSession::DoSendTimeOut(void *para) {
         request_history_.erase(itr);
     }
 }
+
 void CSession::CleanRequestAndCallBack() {
+    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status_[%d], waitinglist_.size[%d], request_history_.size[%u]\n",
+        __FUNCTION__, Id(), status_, waitinglist_.size(), request_history_.size());
     while (!request_history_.empty()) {
         boost::shared_ptr<ape::common::CThreadTimer> timer = request_history_.begin()->second;
-        timer->Stop();
-        timer->Callback(); //will call DoSendTimeOut
         request_history_.erase(request_history_.begin());
+        ape::message::SNetMessage *msg = (ape::message::SNetMessage *)(timer->GetData());
+        timer->Stop();
+        msg->SetReply(ape::common::ERROR_PEER_CLOSE);
+        owner_ != NULL ? owner_->OnRead(this, msg) : delete msg;
     }
     while (!waitinglist_.empty()) {
         std::deque<SReadyPacket>::iterator itr =  waitinglist_.begin();
         ape::message::SNetMessage *msg = (ape::message::SNetMessage *)(itr->packet);
         waitinglist_.pop_front();
         msg->SetReply(ape::common::ERROR_PEER_CLOSE);
-        owner_->OnRead(this, msg);
+        owner_ != NULL ? owner_->OnRead(this, msg) : delete msg;
     }
 }
 
 void CSession::DealWaitingList() {
+    BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status_[%d], waitinglist_.size[%d]\n",
+     __FUNCTION__, Id(), status_, waitinglist_.size());
     while (!waitinglist_.empty()) {
-        std::deque<SReadyPacket>::iterator itr =  waitinglist_.begin();
-        ape::message::SNetMessage *msg = (ape::message::SNetMessage *)(itr->packet);
+        SReadyPacket packet = waitinglist_.front();
         waitinglist_.pop_front();
-        BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status[%s], send\n%s\n", __FUNCTION__, Id(), ConnectStatus[status_], msg->NoticeInfo().c_str());
+        ape::message::SNetMessage *msg = (ape::message::SNetMessage *)(packet.packet);
+
+        //BS_XLOG(XLOG_DEBUG,"CSession::%s, id[%u], status[%s], send\n%s\n", __FUNCTION__, Id(), ConnectStatus[status_], msg->NoticeInfo().c_str());
 
         if (status_ == CONNECTED) {
-            DoSend(msg, itr->timeout);
+            DoSendTo(msg, packet.timeout);
         } else {
             msg->SetReply(ape::common::ERROR_PEER_CLOSE);
-            owner_->OnRead(this, msg);
+            owner_ != NULL ? owner_->OnRead(this, msg) : delete msg;
         }
     }
 }

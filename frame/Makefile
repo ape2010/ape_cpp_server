@@ -7,10 +7,11 @@ GCC=$(shell gcc --version | sed -n '1p' | perl -nle 'print $$1 if /\s+([0-9]\.\d
 CC=g++
 VER=1.0.0
 XLOG=$(HOME)/local/xlog
+BOOST=$(HOME)/local/boost
 
 INSTALLDIR=$(HOME)/local/ape
 
-DIR_LIST=./common ./interface ./net ./protocol ./session ./tinyxml2 ./event
+DIR_LIST=./common ./interface ./net ./protocol ./session ./tinyxml2 ./event ./compressutil
 OutPut=build/
 NEW_CODE_PATH=./
 #SOURCE CODE
@@ -45,7 +46,7 @@ endef
 $(foreach dir,$(CC_DIRS),$(eval $(call SAFE_MKDIR,$(dir))))
 
 
-INC_DIR+=-I/usr/include -I$(XLOG)/include
+INC_DIR+=-I/usr/include -I$(XLOG)/include -I$(BOOST)/include
 
 #LIB_DIR
 
@@ -55,6 +56,7 @@ LIBS=-Wall, --export-dynamic
 
 LDFLAGS=$(LIB_DIR) $(LIBS)
 CPPFLAGS=$(INC_DIR) $(DFLAGS)  -DTIXML_USE_STL
+CFLAGS= -g -O0 -fPIC
 
 EXE1=$(OutPut)/libape.a
 
@@ -65,9 +67,8 @@ include $(DEPS)
 $(EXE1):$(OBJS) $(OBJS2) $(OBJS3)
 	ar -r $@ ./build/*/*.o
 
-
 ./$(OutPut)/%.o:%.cc
-	$(CC) -g -O2 -o $@ -c -fPIC $< $(CPPFLAGS)
+	$(CC) -o $@ $(CFLAGS) -c $< $(CPPFLAGS) #2> output
 ./$(OutPut)/%.d:%.cc
 	@set -e; rm -f $@; \
 	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
@@ -75,7 +76,7 @@ $(EXE1):$(OBJS) $(OBJS2) $(OBJS3)
 	rm -f $@.$$$$
 
 ./$(OutPut)/%.o:%.cpp
-	$(CC) -g -O2 -o $@ -c -fPIC $< $(CPPFLAGS)
+	$(CC) -o $@ $(CFLAGS) -c $< $(CPPFLAGS) #2> output
 ./$(OutPut)/%.d:%.cpp
 	@set -e; rm -f $@; \
 	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
@@ -83,7 +84,7 @@ $(EXE1):$(OBJS) $(OBJS2) $(OBJS3)
 	rm -f $@.$$$$
 
 ./$(OutPut)/%.o:%.c
-	$(CC) -g  -O2 -o $@ -c -fPIC $< $(CPPFLAGS)
+	$(CC) -o $@ $(CFLAGS) -c $< $(CPPFLAGS) #2> output
 ./$(OutPut)/%.d:%.c
 	@set -e; rm -f $@; \
 	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \

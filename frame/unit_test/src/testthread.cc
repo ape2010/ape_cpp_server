@@ -15,7 +15,7 @@ void TestTimerThread::StopInThread() {
 }
 void TestTimerThread::Deal(void *pdata) {
     SMsg *msg = (SMsg *)pdata;
-    BS_XLOG(XLOG_DEBUG,"TestTimerThread::%s, id[%d], msgid[%d]\n", __FUNCTION__, id_, msg->id);
+    //BS_XLOG(XLOG_DEBUG,"TestTimerThread::%s, id[%d], msgid[%d]\n", __FUNCTION__, id_, msg->id);
     if (msg->id == 0) {
         DoPrivateMsg(msg);
     } else if (msg->id == 1) {
@@ -24,7 +24,8 @@ void TestTimerThread::Deal(void *pdata) {
     delete (SMsg *)pdata;
 }
 void TestTimerThread::DoPublicMsg(SMsg *msg) {
-    BS_XLOG(XLOG_DEBUG,"TestTimerThread::%s, id[%d]\n", __FUNCTION__, id_);
+    SPublicMsg *pubmsg = (SPublicMsg *)msg;
+    BS_XLOG(XLOG_DEBUG,"TestTimerThread::%s, id[%d], index[%d]\n", __FUNCTION__, id_, pubmsg->index);
 }
 void TestTimerThread::DoPrivateMsg(SMsg *msg) {
     BS_XLOG(XLOG_DEBUG,"TestTimerThread::%s, id[%d]\n", __FUNCTION__, id_);
@@ -73,9 +74,10 @@ void TestThreadGroup::Stop() {
     }
     threads_.clear();
 }
-void TestThreadGroup::OnPublicMsg() {
-    BS_XLOG(XLOG_DEBUG,"TestThreadGroup::%s\n", __FUNCTION__);
+void TestThreadGroup::OnPublicMsg(int index) {
+    BS_XLOG(XLOG_DEBUG,"TestThreadGroup::%s, [%d]\n", __FUNCTION__, index);
     SPublicMsg *msg = new SPublicMsg;
+    msg->index = index;
     queue_.PutQ(msg, 3);
 }
 void TestThreadGroup::OnPrivateMsg() {

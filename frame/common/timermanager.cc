@@ -25,7 +25,7 @@ CTimerManager::~CTimerManager() {
 void CTimerManager::DetectTimerList() {
     uint64_t now = GetCurrentMillisec();
     uint32_t loopnum = now > checktime_ ? (now - checktime_) / GRANULARITY : 0;
-    
+
     SWheel *wheel =  wheels_[0];
     //BS_XLOG(XLOG_DEBUG, "CTimerManager::%s, loopnum[%u], spokeindex[%u]\n", __FUNCTION__, loopnum, wheel->spokeindex);
     for (uint32_t i = 0; i < loopnum; ++i) {
@@ -74,10 +74,10 @@ uint32_t CTimerManager::Cascade(uint32_t wheelindex) {
     uint64_t now = GetCurrentMillisec();
     SNodeLink *spoke = wheel->spokes + (wheel->spokeindex++);
     SNodeLink *link = spoke->next;
-    //BS_XLOG(XLOG_TRACE, "CTimerManager::%s::%d, wheelindex[%u], spokeindex[%u], link[%p], spoke[%p]\n", 
+    //BS_XLOG(XLOG_TRACE, "CTimerManager::%s::%d, wheelindex[%u], spokeindex[%u], link[%p], spoke[%p]\n",
     //    __FUNCTION__, __LINE__, wheelindex, wheel->spokeindex, link, spoke);
     spoke->next = spoke->prev = spoke;
-    //BS_XLOG(XLOG_TRACE, "CTimerManager::%s::%d, wheelindex[%u], spokeindex[%u], link[%p], spoke[%p]\n", 
+    //BS_XLOG(XLOG_TRACE, "CTimerManager::%s::%d, wheelindex[%u], spokeindex[%u], link[%p], spoke[%p]\n",
     //    __FUNCTION__, __LINE__, wheelindex, wheel->spokeindex, link, spoke);
     while (link != spoke) {
         STimerNode *node = (STimerNode *)link;
@@ -90,9 +90,9 @@ uint32_t CTimerManager::Cascade(uint32_t wheelindex) {
             AddTimerNode(milseconds, node);
             ++casnum;
         }
-        
+
     }
-    
+
     if (wheel->spokeindex >= wheel->size) {
         wheel->spokeindex = 0;
         casnum += Cascade(++wheelindex);
@@ -112,7 +112,7 @@ void CTimerManager::AddTimerNode(uint32_t milseconds, STimerNode *node) {
     uint32_t threshold2 = 1 << (WHEEL_BITS1 + WHEEL_BITS2);
     uint32_t threshold3 = 1 << (WHEEL_BITS1 + 2 * WHEEL_BITS2);
     uint32_t threshold4 = 1 << (WHEEL_BITS1 + 3 * WHEEL_BITS2);
-    
+
     if (interval < threshold1) {
         uint32_t index = (interval + wheels_[0]->spokeindex) & WHEEL_MASK1;
         spoke = wheels_[0]->spokes + index;
@@ -145,7 +145,7 @@ void CTimerManager::RemoveTimer(STimerNode* node) {
         nodelink->next->prev = nodelink->prev;
     }
     nodelink->prev = nodelink->next = NULL;
-    
+
     delete node;
 }
 void CTimerManager::Dump() {

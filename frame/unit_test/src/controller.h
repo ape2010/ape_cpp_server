@@ -9,6 +9,9 @@
 //#define Test_HttpResponseEncoder
 //#define Test_HttpRequestEncoder
 //#define Test_XmlConfigParser
-#define Test_ParserFactory
+//#define Test_ParserFactory
+//#define Test_XmpMessage
+//#define Test_Compress_Message
+//#define Test_Ftd_Message
 
 #endif

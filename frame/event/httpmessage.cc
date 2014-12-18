@@ -15,7 +15,7 @@ void SHttpMessage::SetCookie(const std::string &key, const std::string &value,
 std::string SHttpMessage::NoticeInfo() {
     std::string indent = "    ";
     std::string info = indent;
-    if (type == SNetMessage::E_Request) {
+    if (direction == SNetMessage::E_Request) {
         info += method + " " + url + " " + (httpversion == HTTP_1_1 ? "HTTP/1.1" : "HTTP/1.0") + "\r\n";
     } else {
         info.append(httpversion == HTTP_1_1 ? "HTTP/1.1 " : "HTTP/1.0 ");
@@ -35,6 +35,18 @@ std::string SHttpMessage::NoticeInfo() {
             ";path=" + itrc->second.path + "; domain=" + itrc->second.domain + "\r\n";
     }
     info += indent + body;
+    return info;
+}
+std::string SHttpMessage::BriefInfo() {
+    std::string info;
+    if (direction == SNetMessage::E_Request) {
+        info += method + " " + url + " " + (httpversion == HTTP_1_1 ? "HTTP/1.1" : "HTTP/1.0") + "\r\n";
+    } else {
+        info.append(httpversion == HTTP_1_1 ? "HTTP/1.1 " : "HTTP/1.0 ");
+        char szcode[32] = {0};
+        snprintf(szcode, 31, "%d \r\n", code);
+        info.append(szcode);
+    }
     return info;
 }
 void SHttpMessage::Dump() {

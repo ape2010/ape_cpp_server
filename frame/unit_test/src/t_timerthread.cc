@@ -8,11 +8,15 @@
 using namespace ape::common;
 
 TEST(TestTimerThread, Dump) {
-    TestThreadGroup::GetInstance()->Start();
-    for (int i = 0; i < 5; ++i) {
-        TestThreadGroup::GetInstance()->OnPublicMsg();
-        TestThreadGroup::GetInstance()->OnPrivateMsg();
-        sleep(1);
+    TestThreadGroup::GetInstance()->Start(3);
+    TestThreadGroup::GetInstance()->OnPrivateMsg();
+    for (int i = 0; i < 10; ++i) {
+        TestThreadGroup::GetInstance()->OnPublicMsg(i);
+        //sleep(1);
     }
 }
+TEST(TestTimerThread, Sleep) {
+    sleep(3);
+}
+
 #endif

@@ -40,9 +40,9 @@ const char *CThriftParser::Decode(const char *buf, int len, ape::message::SNetMe
 
     ape::message::SThriftMessage *message = (ape::message::SThriftMessage *)msg;
     if (head.type == T_CALL || head.type == T_ONEWAY) {
-        message->type = ape::message::SNetMessage::E_Request;
+        message->direction = ape::message::SNetMessage::E_Request;
     } else if (head.type == T_REPLY){
-        message->type = ape::message::SNetMessage::E_Response;
+        message->direction = ape::message::SNetMessage::E_Response;
     } else {
         BS_XLOG(XLOG_WARNING,"CThriftParser::%s, invalidate type[%d], method[%s]\n", __FUNCTION__, head.type, message->method.c_str());
         return NULL;
@@ -77,11 +77,12 @@ int CThriftParser::Encode(const ape::message::SNetMessage *msg, ape::common::CBu
     return 0;
 }
 
-ape::message::SNetMessage *CThriftParser::CreateHeartBeatMessage(ape::message::SNetMessage::SMessageType type) {
+ape::message::SNetMessage *CThriftParser::CreateHeartBeatMessage(ape::message::SNetMessage::SMessageDirection direction) {
     ape::message::SThriftMessage *msg = new ape::message::SThriftMessage;
-    msg->method = "AllsparkHeartBeat";
+    msg->method = "HeartBeat";
     msg->seqid = 0;
-    msg->type = type;
+    msg->direction = direction;
+    msg->isheartbeat = true;
     return msg;
 }
 }

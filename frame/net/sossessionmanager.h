@@ -20,15 +20,17 @@ class CSosSessionManager : public virtual CSessionCallBack, public virtual CNetS
  public:
     CSosSessionManager(boost::asio::io_service *io_service);
     virtual void OnConnected(void *session);
-    virtual int  OnConnect(const std::string &name, const std::string &addr, bool autoreconnect = false, int heartbeat = 0);
-    virtual int  DoConnect(const std::string &name, const std::string &addr, bool autoreconnect = false, int heartbeat = 0);
+    virtual int  OnConnect(const std::string &name, const std::string &addr, bool autoreconnect = false, int heartbeat = 0, bool addr_reuse = true);
+    virtual int  DoConnect(const std::string &name, const std::string &addr, bool autoreconnect = false, int heartbeat = 0, bool addr_reuse = true);
     virtual void OnSendTo(const std::string &name, void *para, int timeout = 30);
     virtual void DoSendTo(const std::string &name, void *para, int timeout = 30);
     virtual int  OnPeerClose(void *session);
+    virtual void OnClose(const std::string &name, unsigned int connid);
+    virtual void DoClose(const std::string &name, unsigned int connid);
     virtual ~CSosSessionManager();
     virtual void Dump();
     virtual void DoCheckSession();
-    
+
  private:
     boost::asio::io_service *io_service_;
     CSessionContainer *short_sessions_;

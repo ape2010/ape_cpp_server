@@ -7,7 +7,6 @@
 
 namespace ape{
 namespace net{
-typedef boost::shared_ptr<CConnection> Connection_ptr;
 
 class CHttpSession : public CSession {
  public:

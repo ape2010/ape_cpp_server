@@ -14,7 +14,7 @@ CHttpSession::~CHttpSession() {
     }
 }
 void CHttpSession::OnRead(ape::message::SNetMessage *msg) {
-    if (msg->type == ape::message::SNetMessage::E_Request) {
+    if (msg->direction == ape::message::SNetMessage::E_Request) {
         ((ape::message::SHttpMessage *)msg)->requestno = ++dwseq;
         request_deque_.push_back(SResponseItem(((ape::message::SHttpMessage *)msg)->requestno));
     }

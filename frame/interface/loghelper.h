@@ -1,5 +1,5 @@
-#ifndef _APELUS_MONITOR_LOG_HELPER_H_
-#define _APELUS_MONITOR_LOG_HELPER_H_
+#ifndef _APE_LOG_HELPER_H_
+#define _APE_LOG_HELPER_H_
 
 #include "LogManager.h"
 #include <cstring>

@@ -1,12 +1,13 @@
 #include "sessionmanager.h"
 #include "protocolhelper.h"
 #include "loghelper.h"
+#include "events.h"
 
 
 namespace ape {
 namespace net {
-const int CHECK_SESSION_INTERVAL = 30000; //30s
-CSessionManager::CSessionManager(HandleFactory *f, int threadid) : CIoServiceThread(threadid), 
+const int CHECK_SESSION_INTERVAL = 15000; //30s
+CSessionManager::CSessionManager(HandleFactory *f, int threadid) : CIoServiceThread(threadid),
     CNetService(), CSessionCallBack(), CSocSessionManager(&ioservice_), CSosSessionManager(&ioservice_), factory(f) {
     handle_ = factory->NewHandler();
     InitInner();
@@ -30,19 +31,29 @@ void CSessionManager::StopInThread() {
     handle_->StopInThread(GetThreadId());
 }
 int CSessionManager::OnPeerClose(void *session) {
-    if (0 != CSocSessionManager::OnPeerClose(session)) {
-        return CSosSessionManager::OnPeerClose(session);
+    CSession *p = (CSession*)session;
+    ape::message::SPeerCloseEvent *event = new ape::message::SPeerCloseEvent;
+    event->Init(p->GetRemoteIp().c_str(), p->GetRemotePort());
+    int ret = CSocSessionManager::OnPeerClose(session);
+    if (0 != ret) {
+        ret = CSosSessionManager::OnPeerClose(session);
     }
-    return 0;
+    OnRead(session, event);
+
+    return ret;
 }
 void CSessionManager::OnRead(void *session, void *para) {
     ape::message::SNetEvent *event = (ape::message::SNetEvent *)para;
-    if (session) {event->connid = ((CSession*)session)->Id();}
+    if (session) {
+        event->connid = ((CSession*)session)->Id();
+        event->session_name = ((CSession*)session)->GetName();
+    }
     handle_->OnEvent(GetThreadId(), (ape::message::SEvent *)para);
 }
 void CSessionManager::DoCheckSession() {
     CSocSessionManager::DoCheckSession();
     CSosSessionManager::DoCheckSession();
+    //Dump();
 }
 void CSessionManager::Dump() {
     CIoServiceThread::Dump();

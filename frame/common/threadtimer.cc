@@ -1,8 +1,12 @@
 #include "threadtimer.h"
 #include <boost/bind.hpp>
+#include "loghelper.h"
 
 namespace ape {
 namespace common {
+CThreadTimer::~CThreadTimer() {
+    //BS_XLOG(XLOG_DEBUG, "CTimerManager::%s, interval[%u], entype_[%d], status[%u]\n", __FUNCTION__, dwinterval_, entype_, status_);
+}
 bool CThreadTimer::Start() {
     Stop();
     status_ = TIME_OUT;

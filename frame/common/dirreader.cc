@@ -23,7 +23,7 @@ bool CDirReader::GetFirstFilePath(char *filename) {
 }
 bool CDirReader::OpenDir(const char* path) {
     if (access(path,0) < 0) {
-        return false;        
+        return false;
     }
     ReadFiles(path);
     return true;
@@ -40,7 +40,7 @@ void CDirReader::ReadFiles(const char *path) {
     while (NULL != (pdirent = readdir(dir))) {
         if ((0 == strcmp(pdirent->d_name, ".")) || (0 == strcmp(pdirent->d_name, "..")))
             continue;
-      
+
         std::string filepath = path;
         if (filepath.at(filepath.length()-1) != '/') {
             filepath.append("/");

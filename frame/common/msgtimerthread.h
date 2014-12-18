@@ -9,7 +9,7 @@ namespace common {
 class MsgTimerThread : public CTimerManager {
  public:
     MsgTimerThread();
-    MsgTimerThread(MsgQueuePrio *public_queue);
+    MsgTimerThread(MsgQueuePrio *public_queue, bool self_priority = false);
     virtual ~MsgTimerThread();
 
     void Start();
@@ -19,12 +19,14 @@ class MsgTimerThread : public CTimerManager {
     virtual void StartInThread() {}
     virtual void StopInThread() {}
     virtual void Deal(void *pdata) {}
+    virtual void Dump() {CTimerManager::Dump();}
 
  private:
     void Run();
 
  private:
     boost::thread thread_;
+    bool self_priority_;
     volatile bool is_running_;
     MsgQueuePrio queue_;
     MsgQueuePrio *public_queue_;

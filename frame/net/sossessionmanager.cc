@@ -9,6 +9,7 @@ class CSosSessionManager::CSessionContainer {
   public:
     virtual CSession *GetSession(const std::string &name) = 0;
     virtual CSession *GetSession(const std::string &name, const std::string &addr) = 0;
+    virtual CSession *GetSession(const std::string &name, unsigned int connid) = 0;
     virtual void AddSession(const std::string &name, const std::string &addr, CSession *session) = 0;
     virtual int  DeleteSession(CSession *session) = 0;
     virtual void CheckSession() = 0;
@@ -25,6 +26,9 @@ class CSosSessionManager::CShortSessionContainer : public CSosSessionManager::CS
     virtual CSession *GetSession(const std::string &name, const std::string &addr) {
         return GetSession(name);
     }
+    CSession *GetSession(const std::string &name, unsigned int connid) {
+        return GetSession(name);
+    }
     virtual void AddSession(const std::string &name, const std::string &addr, CSession *session) {
         boost::unordered_map<std::string, CSession*>::iterator itr = sessions_.find(name);;
         if (itr != sessions_.end()) {
@@ -37,8 +41,9 @@ class CSosSessionManager::CShortSessionContainer : public CSosSessionManager::CS
         boost::unordered_map<std::string, CSession*>::iterator itr = sessions_.begin();;
         for(; itr != sessions_.end(); ++itr) {
             if (itr->second == session) {
-                delete session;
-                sessions_.erase(itr);
+                session->SetStatus(CSession::CLOSED);
+                //delete session;
+                //sessions_.erase(itr);
                 return 0;
             }
         }
@@ -51,9 +56,9 @@ class CSosSessionManager::CShortSessionContainer : public CSosSessionManager::CS
             boost::unordered_map<std::string, CSession*>::iterator tmp = itr++;
             CSession *p = tmp->second;
             CSession::EStatus status = p->GetStatus();
-            if(status == CSession::CONNECTED){
+            if(status == CSession::CONNECTED || status == CSession::WAITING || status == CSession::CONNECTING){
                 p->SetStatus(CSession::TIME_OUT);
-            } else if(status == CSession::TIME_OUT || status == CSession::CLOSED) {
+            } else /*if(status == CSession::TIME_OUT || status == CSession::CLOSED)*/ {
                 p->Close();  /** will flush history request and notify OnEvent **/
                 sessions_.erase(tmp);
                 delete p;
@@ -112,6 +117,25 @@ class CSosSessionManager::CPersistentSessionContainer : public CSosSessionManage
         }
         return NULL;
     }
+    virtual CSession *GetSession(const std::string &name, unsigned int connid) {
+        boost::unordered_map<std::string, SSessionGroup>::iterator itr = session_groups_.find(name);
+        if (itr == session_groups_.end()) {
+            return NULL;
+        }
+        SSessionGroup &group = itr->second;
+        if (group.addrs.empty()) {
+            return NULL;
+        }
+        unsigned int size = group.addrs.size();
+        for (unsigned int i = 0; i < size; ++i) {
+            boost::unordered_map<std::string, CSession*>::iterator itrs;
+            itrs = addr_sessions_.find(group.addrs.at(i));
+            if (itrs != addr_sessions_.end()) {
+                return itrs->second;
+            }
+        }
+        return NULL;
+    }
     virtual void AddSession(const std::string &name, const std::string &addr, CSession *session) {
         boost::unordered_map<std::string, CSession*>::iterator itr = addr_sessions_.find(addr);
         if (itr == addr_sessions_.end()) {
@@ -128,8 +152,9 @@ class CSosSessionManager::CPersistentSessionContainer : public CSosSessionManage
         boost::unordered_map<std::string, CSession*>::iterator itr = addr_sessions_.begin();
         for(; itr != addr_sessions_.end(); ++itr) {
             if (itr->second == session) {
-                delete session;
-                addr_sessions_.erase(itr);
+                session->SetStatus(CSession::CLOSED);
+                //delete session;
+                //addr_sessions_.erase(itr);
                 return 0;
             }
         }
@@ -198,19 +223,22 @@ CSosSessionManager::~CSosSessionManager() {
 }
 
 /** name: monitor|rapid_1000|127.0.0.1:8008 ;addr: http://127.0.0.1:8008 */
-int  CSosSessionManager::OnConnect(const std::string &name, const std::string &addr, bool autoreconnect, int heartbeat) {
-    io_service_->post(boost::bind(&CSosSessionManager::DoConnect, this, name, addr, autoreconnect, heartbeat));
+int  CSosSessionManager::OnConnect(const std::string &name, const std::string &addr, bool autoreconnect, int heartbeat, bool addr_reuse) {
+    io_service_->post(boost::bind(&CSosSessionManager::DoConnect, this, name, addr, autoreconnect, heartbeat, addr_reuse));
     return 0;
 }
-int  CSosSessionManager::DoConnect(const std::string &name, const std::string &addr, bool autoreconnect, int heartbeat) {
+int  CSosSessionManager::DoConnect(const std::string &name, const std::string &addr, bool autoreconnect, int heartbeat, bool addr_reuse) {
     BS_XLOG(XLOG_DEBUG,"CSosSessionManager::%s, name[%s], addr[%s], autoreconnect[%d], heartbeat[%d]\n",__FUNCTION__,
         name.c_str(), addr.c_str(), autoreconnect, heartbeat);
     if (name.empty()) {
         BS_XLOG(XLOG_ERROR,"CSosSessionManager::%s, name is empty, addr[%s]\n",__FUNCTION__, addr.c_str());
         return -1;
     }
-    CSessionContainer *session_container = (!autoreconnect && heartbeat == 0) ? short_sessions_ : persistent_sessions_;
-    if (NULL != session_container->GetSession(name, addr)) {
+    CSessionContainer *session_container = (!addr_reuse) ? short_sessions_ : persistent_sessions_;
+    CSession *session = session_container->GetSession(name, addr);
+    if (NULL != session) {
+        session->SetOwner(this);
+        session->DoConnect();
         return 0;
     }
 
@@ -221,9 +249,10 @@ int  CSosSessionManager::DoConnect(const std::string &name, const std::string &a
         BS_XLOG(XLOG_ERROR,"CSosSessionManager::%s, bad addr[%s]...\n",__FUNCTION__, addr.c_str());
         return -1;
     }
-    CSession *session = ape::net::SessionFactory::CreateSession(pro);
+    session = ape::net::SessionFactory::CreateSession(pro);
     session->Init(*io_service_, pro, this, GetTimerManager(), autoreconnect, heartbeat);
     session->SetAddr(addr);
+    session->SetName(name);
     session->Connect(ip, port);
 
     session_container->AddSession(name, addr, session);
@@ -247,10 +276,26 @@ void CSosSessionManager::DoSendTo(const std::string &name, void *para, int timeo
 
     session->DoSendTo(para, timeout * 1000);
 }
-
+void CSosSessionManager::OnClose(const std::string &name, unsigned int connid) {
+    io_service_->post(boost::bind(&CSosSessionManager::DoClose, this, name, connid));
+}
+void CSosSessionManager::DoClose(const std::string &name, unsigned int connid) {
+    CSession *session = short_sessions_->GetSession(name, connid);
+    if (session == NULL) {
+        session = persistent_sessions_->GetSession(name, connid);
+    }
+    if (session == NULL) {
+        BS_XLOG(XLOG_WARNING,"CSosSessionManager::%s, no session[%s], sessoinid[%d]...\n",__FUNCTION__, name.c_str(), connid);
+        return;
+    }
+    session->Close();
+}
 void CSosSessionManager::OnConnected(void *session) {
     CSession *p = (CSession*)session;
     BS_XLOG(XLOG_DEBUG,"CSosSessionManager::%s, addr[%s:%u]\n",__FUNCTION__, p->GetRemoteIp().c_str(), p->GetRemotePort());
+    ape::message::SConnectedEvent *event = new ape::message::SConnectedEvent;
+    event->Init(p->GetRemoteIp().c_str(), p->GetRemotePort());
+    OnRead(p, event);
 }
 int CSosSessionManager::OnPeerClose(void *session) {
     CSession *p = (CSession*)session;

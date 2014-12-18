@@ -14,6 +14,7 @@ typedef struct stThriftMessage : public SEventType<ape::protocol::E_PROTOCOL_THR
     virtual ~stThriftMessage();
     virtual unsigned int GetSequenceId(){return seqid;}
     virtual std::string NoticeInfo();
+    virtual std::string BriefInfo();
     virtual void Dump();
 }SThriftMessage;
 

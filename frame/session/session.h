@@ -16,6 +16,7 @@ class CSession {
     virtual void Init(boost::asio::io_service &io, ape::protocol::EProtocolType pro, CSessionCallBack *o,
         ape::common::CTimerManager *tm = NULL, bool autoreconnect = false, int heartbeat = 0);
     virtual void Connect(const std::string &ip, unsigned int port);
+    virtual void DoConnect();
     virtual void ConnectResult(int result);
     virtual void OnAccept();
     virtual void OnConnected();
@@ -34,7 +35,9 @@ class CSession {
     unsigned int Id() {return ptrconn_->Id();}
     Connection_ptr GetConnectPrt() const {return ptrconn_;}
     void SetAddr(const std::string &addr){addr_ = addr;}
-    const std::string &GetAddr(){return addr_;}
+    void SetName(const std::string &name){session_name_ = name;}
+    const std::string &GetName() const {return session_name_;}
+    const std::string &GetAddr() const {return addr_;}
     const std::string &GetRemoteIp(){return ptrconn_->GetRemoteIp();}
     unsigned int GetRemotePort(){return ptrconn_->GetRemotePort();}
     EStatus GetStatus(){return status_;}
@@ -42,16 +45,16 @@ class CSession {
     void CleanRequestAndCallBack();
  private:
     void DealWaitingList();
-    void DoSendTimeOut(void *para);
-    void DoConnect();
+    void DoRequestTimeOut(void *para);
     void DoHeartBeat();
-    void DoSend(ape::message::SNetMessage *msg, int timeout);
+    void DoSendRequest(ape::message::SNetMessage *msg, int timeout);
 private:
     EStatus status_;
     ape::protocol::EProtocolType proto_;
     Connection_ptr ptrconn_;
     CSessionCallBack *owner_;
     ape::common::CTimerManager *timer_owner_;
+    std::string session_name_;
     std::string addr_;
     std::string ip_;
     unsigned int port_;
@@ -60,7 +63,8 @@ private:
     ape::common::CThreadTimer *timer_reconn_;
     ape::common::CThreadTimer *timer_heartbeat_;
 
-    std::multimap<unsigned int, boost::shared_ptr<ape::common::CThreadTimer> > request_history_;
+    typedef std::multimap<unsigned int, boost::shared_ptr<ape::common::CThreadTimer> > RequestHistory;
+    RequestHistory request_history_;
     typedef struct stReadyPacket {
         void *packet;
         int timeout;

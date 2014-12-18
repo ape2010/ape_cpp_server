@@ -51,6 +51,7 @@ private:
     boost::asio::ip::tcp::resolver resolver_;
     boost::asio::deadline_timer conn_timer_;
     ape::common::CBuffer buffer_;
+    ape::common::CBuffer writebuf_;
     unsigned int id_;
     static unsigned int sm_mark_;
     std::string remoteip_;
@@ -64,6 +65,7 @@ private:
     CSession *session_;
     ape::protocol::CBaseParser *parser_;
     std::deque<SLenMsg> out_queue_;
+    bool is_dealing_read_;
 };
 
 typedef boost::shared_ptr<CConnection> Connection_ptr;

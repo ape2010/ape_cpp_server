@@ -12,7 +12,7 @@ namespace protocol{
 class CBaseParser {
  public:
     virtual ape::message::SNetMessage *CreateMessage() = 0;
-    virtual ape::message::SNetMessage *CreateHeartBeatMessage(ape::message::SNetMessage::SMessageType type = ape::message::SNetMessage::E_Request) = 0;
+    virtual ape::message::SNetMessage *CreateHeartBeatMessage(ape::message::SNetMessage::SMessageDirection direction = ape::message::SNetMessage::E_Request) = 0;
     /** return value p
         p == NULL //error
         p == buf incomplete packet, continue to read
@@ -22,6 +22,7 @@ class CBaseParser {
     virtual const char *Decode(const char *buf, int len, ape::message::SNetMessage *msg) = 0;
     virtual int Encode(const ape::message::SNetMessage *msg, ape::common::CBuffer *out) = 0;
     virtual void Release() = 0;
+    virtual ~CBaseParser() {}
 };
 class ParserFactory {
  public:

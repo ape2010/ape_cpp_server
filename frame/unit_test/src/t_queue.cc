@@ -22,4 +22,42 @@ TEST(MsgQueuePrio, Dump) {
     //EXPECT_EQ(0X002, p);
     EXPECT_EQ(0, queue.GetUsed());
 }
+
+MsgQueuePrio public_queue;
+void *thread_run(void *)
+{
+    BS_XLOG(XLOG_DEBUG, "%s, \n", __FUNCTION__);
+    while (1) {
+        void *pdata = public_queue.GetQ(1000);
+        //BS_XLOG(XLOG_DEBUG, "data[0X%0X]\n", pdata);
+        if (pdata) {
+            BS_XLOG(XLOG_DEBUG, "data[0X%0X]\n", pdata);
+        }
+    }
+}
+TEST(MsgQueuePrio, PutMessage) {
+    pthread_t id[5];
+    for (int i = 0; i < 1; ++i) {
+        int ret = pthread_create(&id[i], NULL, &thread_run, NULL);
+        if(ret!=0){
+            BS_XLOG(XLOG_DEBUG, "Create pthread error!\n");
+            exit (1);
+        }
+    }
+    for (int i = 1; i < 10; ++i) {
+        usleep(10);
+        BS_XLOG(XLOG_DEBUG, "put [0X%0X]\n", i);
+        public_queue.PutQ((void *)i, 1);
+    }
+
+    for(int i=0;i<5;i++){
+        pthread_join(id[i],NULL);
+    }
+}
+
+TEST(MsgQueuePrio, Sleep) {
+    while(1) {
+        sleep(3);
+    }
+}
 #endif

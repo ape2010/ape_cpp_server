@@ -4,18 +4,19 @@
 #include "threadtimer.h"
 using namespace ape::common;
 
-typedef struct stMsg { 
-    int id; 
-    stMsg(int i):id(i) {} 
-    virtual ~stMsg(){} 
+typedef struct stMsg {
+    int id;
+    stMsg(int i):id(i) {}
+    virtual ~stMsg(){}
 } SMsg;
-typedef struct stPrivateMsg : SMsg { 
-    stPrivateMsg():SMsg(0){} 
-    virtual ~stPrivateMsg(){} 
+typedef struct stPrivateMsg : SMsg {
+    stPrivateMsg():SMsg(0){}
+    virtual ~stPrivateMsg(){}
 } SPrivateMsg;
-typedef struct stPublicMsg : SMsg { 
-    stPublicMsg():SMsg(1){} 
-    virtual ~stPublicMsg(){}  
+typedef struct stPublicMsg : SMsg {
+    stPublicMsg():SMsg(1){}
+    int index;
+    virtual ~stPublicMsg(){}
 } SPublicMsg;
 
 class TestTimerThread : public MsgTimerThread{
@@ -39,7 +40,7 @@ class TestThreadGroup {
     ~TestThreadGroup();
     void Start(int threads = 5);
     void Stop();
-    void OnPublicMsg();
+    void OnPublicMsg(int index);
     void OnPrivateMsg();
  private:
     TestThreadGroup();

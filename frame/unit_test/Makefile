@@ -10,8 +10,11 @@ GTEST=$(HOME)/local/gtest
 XLOG=$(HOME)/local/xlog
 MONGOC=$(HOME)/local/mongo-c-driver
 JSON=$(HOME)/local/json
+BOOST=$(HOME)/local/boost
 
-DIR_LIST=../interface ../common ../net ../protocol ../tinyxml2 ../session ../event ./src
+DIR_LIST = ../interface ../common ../net ../protocol ../tinyxml2 ../session ../event ../compressutil
+DIR_LIST += ./src ./helper
+
 OutPut=build/test/
 NEW_CODE_PATH=./
 #SOURCE CODE
@@ -47,13 +50,13 @@ $(foreach dir,$(CC_DIRS),$(eval $(call SAFE_MKDIR,$(dir))))
 
 
 INC_DIR+=-I$(GTEST)/include -I$(XLOG)/include #-I$(MONGOC)/include/libbson-1.0 #-I$(MONGOC)/include/libmongoc-1.0
-INC_DIR+=-I$(JSON)/include/json
+INC_DIR+= -I$(BOOST)/include
 #LIB_DIR
 
-LIB_DIR=-L/usr/local/lib -L $(GTEST)/lib $(XLOG)/lib/libxlog.a -L$(JSON)/lib
+LIB_DIR=-L $(GTEST)/lib $(XLOG)/lib/libxlog.a -L$(BOOST)/lib
 #LIB_DIR+=-L$(MONGOC)/lib #$(MONGOC)/lib/libbson-1.0.a
 
-LIBS=-lz -lrt -lgtest -lboost_thread -lboost_system -lpthread -Wall -ldl -Wl,--export-dynamic
+LIBS=-lz -lgtest -lboost_thread -lboost_system -lpthread -Wall -ldl -Wl
 
 LDFLAGS=$(LIB_DIR) $(LIBS)
 CPPFLAGS=$(INC_DIR) $(DFLAGS)  -DTIXML_USE_STL

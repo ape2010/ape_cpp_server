@@ -8,10 +8,13 @@ class CNetService {
  public:
     virtual boost::asio::io_service *GetIoService() = 0;
     virtual ape::common::CTimerManager *GetTimerManager() = 0;
-    virtual int  OnConnect(const std::string &name, const std::string &addr, bool autoreconnect = false, int heartbeat = 0) = 0;
-    virtual int  DoConnect(const std::string &name, const std::string &addr, bool autoreconnect = false, int heartbeat = 0) = 0;
+    /** if add_reuse is false, the name should be unique */
+    virtual int  OnConnect(const std::string &name, const std::string &addr, bool autoreconnect = false, int heartbeat = 0, bool addr_reuse = true) = 0;
+    virtual int  DoConnect(const std::string &name, const std::string &addr, bool autoreconnect = false, int heartbeat = 0, bool addr_reuse = true) = 0;
     virtual void OnSendTo(const std::string &name, void *para, int timeout = 30) = 0;
     virtual void DoSendTo(const std::string &name, void *para, int timeout = 30) = 0;
+    virtual void OnClose(const std::string &name, unsigned int connid) = 0;
+    virtual void DoClose(const std::string &name, unsigned int connid) = 0;
     virtual void OnSendBack(unsigned int connid, void *para) = 0;
     virtual void DoSendBack(unsigned int connid, void *para) = 0;
 };

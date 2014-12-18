@@ -73,10 +73,10 @@ CHttpParser::CHttpParser() : contentlen_(0), ischunked_(false) {
         sm_default_header_["Content-Type"] = "text/html; charset=utf-8";
     }
     if (sm_default_request_header_.empty()) {
-        sm_default_request_header_["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
-        sm_default_request_header_["Cache-Control"] = "no-cache";
+        //sm_default_request_header_["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+        //sm_default_request_header_["Cache-Control"] = "no-cache";
         sm_default_request_header_["User-Agent"] = "ApeHttpClient";
-        sm_default_request_header_["Accept-Language"] = "en-US,en;q=0.8,zh-CN;q=0.6,zh-TW;q=0.4";
+        //sm_default_request_header_["Accept-Language"] = "en-US,en;q=0.8,zh-CN;q=0.6,zh-TW;q=0.4";
     }
 }
 const char *CHttpParser::Decode(const char *buf, int len, ape::message::SNetMessage *msg) {
@@ -167,12 +167,13 @@ const char *CHttpParser::Decode(const char *buf, int len, ape::message::SNetMess
 
     begin = headend + 4;
     if(ischunked_) {
-        while(begin < buf + len) {
+        while(begin <= buf + len) {
             int chunklen = 0;
-            sscanf(begin, "%0X", &chunklen);
+            //sscanf(begin, "%0X", &chunklen);
             if (1 != sscanf(begin, "%0X", &chunklen) || chunklen < 0) {
                 return NULL;
             }
+            //BS_XLOG(XLOG_TRACE,"CHttpParser::%s, chunklen[%d]\n", __FUNCTION__, chunklen);
             begin = strstr(begin,"\r\n") + 2;
             if (chunklen == 0) {
                 break;
@@ -183,7 +184,7 @@ const char *CHttpParser::Decode(const char *buf, int len, ape::message::SNetMess
             message->body.append(begin, chunklen);
             begin += chunklen + 2;
         }
-        return begin;
+        return begin + 2;
     }
     if (begin + contentlen_ > buf + len) { //incomplete packet
         return buf;
@@ -195,7 +196,7 @@ const char *CHttpParser::Decode(const char *buf, int len, ape::message::SNetMess
     return begin + contentlen_;
 }
 int CHttpParser::Encode(const ape::message::SNetMessage *msg, ape::common::CBuffer *out) {
-    return (msg->type == ape::message::SNetMessage::E_Request) ?
+    return (msg->direction == ape::message::SNetMessage::E_Request) ?
         EncodeRequest((ape::message::SHttpMessage *)msg, out) :
         EncodeResponse((ape::message::SHttpMessage *)msg, out);
 }
@@ -408,11 +409,11 @@ int CHttpParser::EncodeResponse(const ape::message::SHttpMessage *msg, ape::comm
     }
     return 0;
 }
-ape::message::SNetMessage *CHttpParser::CreateHeartBeatMessage(ape::message::SNetMessage::SMessageType type) {
+ape::message::SNetMessage *CHttpParser::CreateHeartBeatMessage(ape::message::SNetMessage::SMessageDirection direction) {
     ape::message::SHttpMessage *msg = new ape::message::SHttpMessage;
     msg->keepalive = true;
     msg->httpversion = ape::message::SHttpMessage::HTTP_1_1;
-    if (type == ape::message::SNetMessage::E_Request) {
+    if (direction == ape::message::SNetMessage::E_Request) {
         msg->method = "GET";
         msg->url = "/HeartBeat";
     } else {

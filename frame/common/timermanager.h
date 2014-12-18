@@ -28,10 +28,10 @@ typedef struct stWheel {
     SNodeLink *spokes;
     uint32_t size;
     uint32_t spokeindex;
-    stWheel(uint32_t n) : size(n), spokeindex(0){ 
+    stWheel(uint32_t n) : size(n), spokeindex(0){
         spokes = new SNodeLink[n];
     }
-    ~stWheel() { 
+    ~stWheel() {
         if (spokes) {
             for (int j = 0; j < size; ++j) {
                 SNodeLink *link = (spokes + j)->next;
@@ -41,7 +41,7 @@ typedef struct stWheel {
                     delete node;
                 }
             }
-            delete []spokes; 
+            delete []spokes;
             spokes = NULL;
         }
     }
@@ -55,13 +55,13 @@ class CTimerManager {
     STimerNode* AddTimer(uint32_t seconds, CThreadTimer *timer);
     void RemoveTimer(STimerNode* node);
     virtual void Dump();
-    
+
   private:
     uint32_t Cascade(uint32_t wheelindex);
     void AddTimerNode(uint32_t milseconds, STimerNode *node);
     void AddToReadyNode(STimerNode *node);
     void DoTimeOutCallBack();
-    
+
   private:
     SWheel *wheels_[WHEEL_NUM];
     uint64_t checktime_;

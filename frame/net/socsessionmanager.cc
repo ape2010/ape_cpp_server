@@ -27,8 +27,9 @@ int CSocSessionManager::OnPeerClose(void *session) {
 
     std::map<unsigned int, CSession*>::iterator itr = sessions_.find(p->Id());
     if(itr != sessions_.end()) {
-        delete itr->second;
-        sessions_.erase(itr);
+        p->SetStatus(CSession::CLOSED);
+        //delete itr->second;
+        //sessions_.erase(itr);
         return 0;
     }
     return -1;

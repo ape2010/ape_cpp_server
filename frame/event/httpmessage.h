@@ -34,6 +34,7 @@ typedef struct stHttpMessage : public SEventType<ape::protocol::E_PROTOCOL_HTTP,
     virtual bool IsOk() {return code == 200;}
     virtual std::string NoticeInfo();
     virtual void Dump();
+    virtual std::string BriefInfo();
 
     void AddHeader(const std::string &key, const std::string &value);
     void SetCookie(const std::string &key, const std::string &value, const std::string &path, const std::string &domain, time_t e = 0);

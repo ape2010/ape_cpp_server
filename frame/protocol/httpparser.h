@@ -12,10 +12,11 @@ class CHttpParser : public CBaseParser{
  public:
     CHttpParser();
     virtual ape::message::SNetMessage *CreateMessage() {return new ape::message::SHttpMessage;}
-    virtual ape::message::SNetMessage *CreateHeartBeatMessage(ape::message::SNetMessage::SMessageType type = ape::message::SNetMessage::E_Request);
+    virtual ape::message::SNetMessage *CreateHeartBeatMessage(ape::message::SNetMessage::SMessageDirection direction = ape::message::SNetMessage::E_Request);
     virtual const char *Decode(const char *buf, int len, ape::message::SNetMessage *e);
     virtual int Encode(const ape::message::SNetMessage *e, ape::common::CBuffer *out);
     virtual void Release() {delete this;}
+    virtual ~CHttpParser() {}
  private:
     void ParseHeader(const std::string &key, const std::string &value, ape::message::SHttpMessage *message);
     int  EncodeRequest(const ape::message::SHttpMessage *msg, ape::common::CBuffer *out);

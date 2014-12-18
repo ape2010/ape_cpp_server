@@ -2,6 +2,7 @@
 #include "loghelper.h"
 #include "httpparser.h"
 #include "thriftparser.h"
+//#include "ftdparser.h"
 
 namespace ape{
 namespace protocol{
@@ -11,6 +12,7 @@ namespace protocol{
 ParserFactory *ParserFactory::factories_[E_PROTOCOL_ALL] = {NULL};
 HttpParserFactory HttpParserFactory::http_parser_factory_;
 ThriftParserFactory ThriftParserFactory::thrift_parser_factory_;
+//FtdParserFactory FtdParserFactory::ftd_parser_factory_;
 
 CBaseParser *ParserFactory::CreateParser(EProtocolType protocol) {
     if (protocol >= E_PROTOCOL_ALL || factories_[protocol] == NULL) {

@@ -24,27 +24,27 @@ TEST(CTimerManager, Dump) {
     timer1_1.Start();
     timer2.Start();
     timer3.Start();
-    timer4.Start();    
+    timer4.Start();
     timermanager.Dump();
-    
-    timer2.Stop();    
+
+    timer2.Stop();
     timermanager.Dump();
-    
-    timer1.Stop();    
-    timer3.Stop(); 
+
+    timer1.Stop();
+    timer3.Stop();
     timermanager.Dump();
-    
-    timer1.Start();    
-    timer3.Start(); 
+
+    timer1.Start();
+    timer3.Start();
     timer2.Start();
     timermanager.Dump();
-    timer1.Start();  
-    
+    timer1.Start();
+
     for (int i = 0; i < 10; ++i) {
         timermanager.DetectTimerList();
         //usleep(100000);
         sleep(1);
-        
+
         //timermanager.Dump();
     }
 }
